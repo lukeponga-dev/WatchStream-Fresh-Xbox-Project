@@ -2,88 +2,182 @@
     x:Class="WatchStream.Xbox.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Background="#050B1B" Foreground="#F5F7FF" Loaded="Page_Loaded">
-    <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="205"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <Border Grid.Column="0" Background="#07142A" BorderBrush="#183B70" BorderThickness="1" CornerRadius="0" Padding="18,20">
+    Background="#080B12"
+    Foreground="#F4F6FB"
+    Loaded="Page_Loaded">
+
+    <Page.Resources>
+        <SolidColorBrush x:Key="AccentBrush" Color="#9BEA38"/>
+        <SolidColorBrush x:Key="PanelBrush" Color="#151A24"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#9BA5B5"/>
+        <Style x:Key="RailButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Background" Value="#111722"/>
+            <Setter Property="Foreground" Value="#D9DFE9"/>
+            <Setter Property="BorderBrush" Value="#111722"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid XYFocusKeyboardNavigation="Enabled">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="224"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Persistent controller-friendly navigation rail -->
+        <Border Grid.Column="0" Background="#0D1119" BorderBrush="#202734" BorderThickness="0,0,1,0" Padding="18,24,18,20">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="18"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-                    <Border Width="36" Height="36" CornerRadius="10" Background="#39D6C5"><TextBlock Text="▶" FontSize="20" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                    <StackPanel VerticalAlignment="Center" Spacing="1"><TextBlock Text="WATCHSTREAM" FontSize="15" FontWeight="Bold" CharacterSpacing="45"/><TextBlock Text="YOUR MEDIA, YOUR WAY" FontSize="8" Foreground="#9BA8C7" CharacterSpacing="55"/></StackPanel>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                    <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource AccentBrush}">
+                        <TextBlock Text="W" FontSize="27" FontWeight="Bold" Foreground="#11170B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Text="WATCHSTREAM" FontSize="15" FontWeight="Bold" CharacterSpacing="35"/>
+                        <TextBlock Text="ENTERTAINMENT HUB" FontSize="9" Foreground="#9BA5B5" CharacterSpacing="70"/>
+                    </StackPanel>
                 </StackPanel>
-                <StackPanel Grid.Row="2" Spacing="7">
-                    <TextBlock Text="MENU" FontSize="10" FontWeight="Bold" Foreground="#7181A2" CharacterSpacing="140" Margin="10,0,0,4"/>
-                    <Button x:Name="HomeNavButton" Content="⌂   Home" Click="HomeNavButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#3420A7" Foreground="#FFFFFF" TabIndex="0" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="DiscoverButton" Content="✦   Discover" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="1" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="LibraryButton" Content="▤   Library" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="SeriesNavButton" Content="▣   Series" Click="SeriesButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="3" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="AddonsButton" Content="▦   Add-ons" Click="AddonsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="4" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="SearchButton" Content="⌕   Search" Click="SearchButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="5" UseSystemFocusVisuals="True"/>
-                    <Button x:Name="SettingsButton" Content="⚙   Settings" Click="SettingsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" FontSize="15" Background="#101F3A" Foreground="#F5F7FF" TabIndex="6" UseSystemFocusVisuals="True"/>
+
+                <StackPanel Grid.Row="2" Spacing="8">
+                    <TextBlock Text="YOUR SPACE" FontSize="10" FontWeight="Bold" Foreground="#778293" CharacterSpacing="140" Margin="12,0,0,6"/>
+                    <Button x:Name="HomeNavButton" Content="⌂    Home" Style="{StaticResource RailButtonStyle}" Background="#27351C" Foreground="#B8F875" BorderBrush="#3E5429" Click="HomeNavButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="0"/>
+                    <Button x:Name="DiscoverButton" Content="✦    Discover" Style="{StaticResource RailButtonStyle}" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="1"/>
+                    <Button x:Name="LibraryButton" Content="▤    My Library" Style="{StaticResource RailButtonStyle}" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="2"/>
+                    <Button x:Name="SeriesNavButton" Content="▣    Series" Style="{StaticResource RailButtonStyle}" Click="SeriesButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="3"/>
+                    <Button x:Name="SearchButton" Content="⌕    Search" Style="{StaticResource RailButtonStyle}" Click="SearchButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="4"/>
+                    <Border Height="1" Background="#242B37" Margin="10,12,10,8"/>
+                    <Button x:Name="AddonsButton" Content="▦    Add-ons" Style="{StaticResource RailButtonStyle}" Click="AddonsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="5"/>
+                    <Button x:Name="SettingsButton" Content="⚙    Settings" Style="{StaticResource RailButtonStyle}" Click="SettingsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="6"/>
                 </StackPanel>
-                <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#183B70" Margin="0,0,0,7"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/><TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/></StackPanel>
+
+                <StackPanel Grid.Row="3" Spacing="8">
+                    <Border Background="#151B25" BorderBrush="#2B3443" BorderThickness="1" CornerRadius="12" Padding="12">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="STREMIO ACCOUNT" FontSize="10" FontWeight="Bold" Foreground="#9BA5B5" CharacterSpacing="75"/>
+                            <TextBlock Text="Sync your streaming setup" FontSize="12" Foreground="#DCE2EC" TextWrapping="Wrap"/>
+                            <Button x:Name="ConnectButton" Content="Connect account  ›" Click="ConnectButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="38" HorizontalContentAlignment="Left" Padding="2,0" Background="Transparent" Foreground="#B8F875" BorderThickness="0" FontSize="13" TabIndex="7" UseSystemFocusVisuals="True"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="A  SELECT     B  BACK" FontSize="10" Foreground="#707B8C" HorizontalAlignment="Center"/>
+                </StackPanel>
             </Grid>
         </Border>
-        <Grid Grid.Column="1" Margin="24,20,24,18" RowSpacing="14">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="2.2*"/><RowDefinition Height="Auto"/><RowDefinition Height="1.15*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <StackPanel Spacing="2"><TextBlock Text="Home" FontSize="30" FontWeight="Bold"/><TextBlock Text="All your entertainment in one place" FontSize="14" Foreground="#9BA8C7"/></StackPanel>
-                <Button Grid.Column="1" x:Name="ConnectButton" Content="Connect Stremio" Click="ConnectButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="165" MinHeight="46" FontSize="15" Background="#172B4D" Foreground="#FFFFFF" BorderBrush="#2458A7" BorderThickness="1" TabIndex="6" UseSystemFocusVisuals="True"/>
-            </Grid>
-            <Border Grid.Row="1" CornerRadius="18" BorderBrush="#2458A7" BorderThickness="1" Padding="26" Background="#0B1B3B">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" Spacing="11" MaxWidth="600">
-                        <TextBlock Text="YOUR NEXT FAVOURITE" Foreground="#39D6C5" FontSize="12" FontWeight="Bold" CharacterSpacing="170"/>
-                        <TextBlock Text="A new horizon." FontSize="38" FontWeight="Bold" TextWrapping="Wrap"/>
-                        <TextBlock Text="Explore a world beyond your own." FontSize="16" Foreground="#B7C2DC" TextWrapping="Wrap"/>
-                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
-                            <Button Content="▶  Discover titles" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="165" MinHeight="48" FontSize="15" Background="#174BFF" Foreground="#FFFFFF" TabIndex="7" UseSystemFocusVisuals="True"/>
-                            <Button Content="+  Add to Library" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="155" MinHeight="48" FontSize="15" Background="#14294D" Foreground="#FFFFFF" BorderBrush="#2458A7" BorderThickness="1" TabIndex="8" UseSystemFocusVisuals="True"/>
-                        </StackPanel>
+
+        <!-- Main dashboard -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ZoomMode="Disabled">
+            <Grid Margin="34,26,34,26" RowSpacing="26">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="300"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="GOOD EVENING" FontSize="11" FontWeight="Bold" Foreground="#B8F875" CharacterSpacing="170"/>
+                        <TextBlock Text="What are we watching?" FontSize="32" FontWeight="Bold"/>
+                        <TextBlock Text="Your movies, series and add-ons — all in one place." FontSize="15" Foreground="{StaticResource MutedBrush}"/>
                     </StackPanel>
-                    <Grid Grid.Column="1" Margin="15,0,0,0">
-                        <Border CornerRadius="16" Background="#101F49" BorderBrush="#283F91" BorderThickness="1"/>
-                        <Ellipse Width="170" Height="170" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="#182D76" Opacity="0.7"/>
-                        <Ellipse Width="115" Height="115" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="#1D5BC5" Opacity="0.55"/>
-                        <TextBlock Text="▶" FontSize="76" Foreground="#39D6FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Text="YOUR WATCHLIST" FontSize="12" FontWeight="Bold" CharacterSpacing="100" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,18"/>
-                    </Grid>
+                    <Border Grid.Column="1" Background="#151A24" BorderBrush="#2B3443" BorderThickness="1" CornerRadius="12" Padding="14,10" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                            <Ellipse Width="9" Height="9" Fill="#9BEA38"/>
+                            <TextBlock Text="XBOX READY" FontSize="11" FontWeight="Bold" Foreground="#DCE2EC" VerticalAlignment="Center" CharacterSpacing="55"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
-            </Border>
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBlock Text="Continue Watching" FontSize="22" FontWeight="Bold"/>
-                <TextBlock Grid.Column="1" Text="Browse all  ›" FontSize="13" Foreground="#39D6C5" VerticalAlignment="Center"/>
+
+                <Border Grid.Row="1" CornerRadius="20" Background="#18231A" BorderBrush="#35452E" BorderThickness="1" Padding="30">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="0.8*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Spacing="13" MaxWidth="560">
+                            <Border Background="#2C4020" CornerRadius="6" Padding="9,5" HorizontalAlignment="Left">
+                                <TextBlock Text="MADE FOR YOUR NEXT MARATHON" FontSize="10" FontWeight="Bold" Foreground="#C6F69A" CharacterSpacing="80"/>
+                            </Border>
+                            <TextBlock Text="Your next favourite\nstarts here." FontSize="38" FontWeight="Bold" TextWrapping="Wrap" LineHeight="43"/>
+                            <TextBlock Text="Explore something new, pick up where you left off, or find a series worth staying in for." FontSize="15" Foreground="#C0CBB8" TextWrapping="Wrap" MaxWidth="490"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
+                                <Button Content="✦   Explore titles" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="174" MinHeight="50" Padding="18,0" FontSize="15" FontWeight="SemiBold" Background="#9BEA38" Foreground="#12180D" BorderBrush="#9BEA38" TabIndex="8" UseSystemFocusVisuals="True"/>
+                                <Button Content="▤   Open library" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="155" MinHeight="50" Padding="16,0" FontSize="15" Background="#202B22" Foreground="#F4F6FB" BorderBrush="#465540" BorderThickness="1" TabIndex="9" UseSystemFocusVisuals="True"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Grid Grid.Column="1" Margin="18,0,0,0">
+                            <Ellipse Width="240" Height="240" Fill="#2A3C25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse Width="186" Height="186" Fill="#354D2C" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse Width="132" Height="132" Fill="#9BEA38" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.95"/>
+                            <TextBlock Text="▶" FontSize="66" FontWeight="Bold" Foreground="#17200F" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8,0,0,4"/>
+                            <Border Background="#111A12" CornerRadius="8" Padding="12,7" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,8">
+                                <TextBlock Text="YOUR WATCHLIST, REIMAGINED" FontSize="10" FontWeight="Bold" Foreground="#C6F69A" CharacterSpacing="65"/>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="Continue watching" FontSize="24" FontWeight="Bold"/>
+                        <TextBlock Text="Jump back into the stories you love." FontSize="13" Foreground="{StaticResource MutedBrush}"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Browse all  ›" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" VerticalAlignment="Center" MinHeight="42" Padding="14,0" Background="#151A24" Foreground="#B8F875" BorderBrush="#303949" BorderThickness="1" FontSize="13" TabIndex="10" UseSystemFocusVisuals="True"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ZoomMode="Disabled">
+                    <ItemsControl x:Name="HomeMediaItems">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="14"/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#151A24" BorderBrush="#2B3443" BorderThickness="1" Padding="0" Width="184" MinHeight="232" UseSystemFocusVisuals="True">
+                                    <StackPanel Spacing="0">
+                                        <Grid Height="150" Background="#202A37">
+                                            <Image Source="{Binding Poster}" Stretch="UniformToFill"/>
+                                            <Border Background="#99080B12" HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="5" Padding="7,4" Margin="9">
+                                                <TextBlock Text="WATCHSTREAM PICK" FontSize="8" FontWeight="Bold" Foreground="#DDF7C8" CharacterSpacing="30"/>
+                                            </Border>
+                                            <Border Width="38" Height="38" CornerRadius="19" Background="#9BEA38" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10">
+                                                <TextBlock Text="▶" FontSize="16" FontWeight="Bold" Foreground="#17200F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+                                        <Border Padding="12,11">
+                                            <StackPanel Spacing="5">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" Height="38"/>
+                                                <TextBlock Text="{Binding Year}" FontSize="12" Foreground="#9BA5B5"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock x:Name="StatusText" Text="Ready. Use your controller to explore." FontSize="12" Foreground="#9BA5B5" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="WATCHSTREAM  •  XBOX ONE / SERIES X|S" FontSize="10" Foreground="#707B8C" VerticalAlignment="Center"/>
+                </Grid>
             </Grid>
-            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ZoomMode="Disabled">
-                <ItemsControl x:Name="HomeMediaItems">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" Margin="0,0,12,0" Width="190" MinHeight="190" UseSystemFocusVisuals="True">
-                                <StackPanel Spacing="0">
-                                    <Grid Height="125" Background="#14285A">
-                                        <Image Source="{Binding Poster}" Stretch="UniformToFill"/>
-                                        <TextBlock Text="▶" FontSize="38" Foreground="#39D6FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <Border Padding="10">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"/>
-                                            <TextBlock Text="{Binding Year}" FontSize="11" Foreground="#9BA8C7"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-            <Grid Grid.Row="4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock x:Name="StatusText" Text="Ready. Use your controller to explore." FontSize="12" Foreground="#9BA8C7" VerticalAlignment="Center"/><TextBlock Grid.Column="1" Text="XBOX ONE  •  CONTROLLER READY" FontSize="10" Foreground="#657493" VerticalAlignment="Center"/></Grid>
-        </Grid>
+        </ScrollViewer>
     </Grid>
 </Page>
