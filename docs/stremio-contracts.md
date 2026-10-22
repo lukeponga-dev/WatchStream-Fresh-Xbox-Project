@@ -1,45 +1,24 @@
-# Stremio integration contract checklist
+# Stremio account integration notes
 
-## Upstream references
+## Verified upstream behavior
 
-- Official API client: https://github.com/Stremio/stremio-api-client
-- Official add-on client: https://github.com/Stremio/stremio-addon-client
-- Add-on protocol documentation linked from the add-on client repository.
+The public [Stremio API client](https://github.com/Stremio/stremio-api-client) documents `https://api.strem.io` as its default endpoint. Its client sends JSON POST requests to `/api/{method}`, includes `authKey` in the request body, and expects a JSON `result` on success. Its store uses `login` with email/password and receives `result.authKey` and `result.user`; logout calls the `logout` method. See the upstream [API client implementation](https://github.com/Stremio/stremio-api-client/blob/master/apiClient.js) and [store implementation](https://github.com/Stremio/stremio-api-client/blob/master/apiStore.js).
 
-## Account API
+This verifies the basic email/password API flow used by this prototype, but does not guarantee the upstream service contract will remain stable. QR/device-code login is not implemented or claimed to be supported.
 
-The public `stremio-api-client` README documents:
+## Current WatchStream implementation
 
-- Default endpoint: `https://api.strem.io`
-- A stateless API client with an `authKey` option and `request(method, params)`
-- Store operations including `login({ email, password, fbLoginToken? })`, `logout()`, `pushUser()`, `pullUser()`, `pushAddonCollection()`, and `pullAddonCollection()`
-- An Apple authentication method is documented by the client README.
+- `StremioAccountService` posts email/password to `https://api.strem.io/api/login` over HTTPS.
+- The password is held transiently in the account page and sign-in method; it is not written to persistent storage.
+- Only the returned `authKey` is persisted, behind `ISessionStore`, using the Windows `PasswordVault` adapter.
+- Sign-out attempts the API logout and clears local session material even if the remote call fails.
+- User-facing errors avoid exposing response bodies, credentials, auth keys, or request payloads.
+- The account page supports email/password sign-in only; no QR/device-code flow is assumed.
 
-This documentation does **not** establish a QR/device-code sign-in flow. Do not design one into the UI until a supported, current protocol is verified.
+## Security and verification still required
 
-## Contract tests required before implementation
-
-- [ ] Inspect upstream implementation/tests for current method names and payload schemas.
-- [ ] Confirm login response, auth key/session semantics, expiry/re-auth behavior and logout behavior.
-- [ ] Confirm user sync and add-on collection sync payloads and conflict behavior.
-- [ ] Confirm error envelopes and rate-limit/network failure behavior.
-- [ ] Confirm whether direct HTTP implementation is appropriate or whether a compatible supported client/runtime is required.
-- [ ] Never include real account credentials or auth keys in tests, fixtures, logs, crash reports, or screenshots.
-
-## Add-on protocol
-
-The public `stremio-addon-client` README describes the v3 protocol, add-on manifests, `isSupported(resource, type, id)`, and `get(resource, type, id, extra)` patterns.
-
-Required tests:
-- [ ] Manifest parsing and validation.
-- [ ] Supported resource/type detection.
-- [ ] Catalog and metadata requests.
-- [ ] Stream request and response parsing.
-- [ ] URL normalization without silently changing signed URLs.
-- [ ] Timeout, TLS, redirect, invalid JSON, and unavailable add-on handling.
-- [ ] Add-on response content must be treated as untrusted data.
-- [ ] Add-on stream result must pass the playback capability check.
-
-## Scope guard
-
-Syncing a configured add-on collection means WatchStream knows which add-ons the account configured. It does not guarantee those add-ons are online, supported by the console, or authorized to provide a particular stream.
+- Build and run on the target Xbox One to verify `PasswordVault` availability and behavior in the selected modern .NET/UWP project model.
+- Verify sign-in success, invalid credentials, offline/timeout, app restart session restore, and sign-out.
+- Review session expiry and reauthentication behavior before shipping.
+- Confirm current Stremio API terms and supported authentication flow before public distribution.
+- Never include real credentials or auth keys in source control, logs, test fixtures, crash reports, or screenshots.
