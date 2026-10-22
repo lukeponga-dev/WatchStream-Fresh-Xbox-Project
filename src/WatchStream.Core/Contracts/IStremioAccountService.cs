@@ -3,12 +3,10 @@ using System.Threading.Tasks;
 
 namespace WatchStream.Core.Contracts
 {
-    /// <summary>
-    /// Account API boundary. Concrete request/response DTOs are intentionally deferred
-    /// until upstream Stremio contracts are verified against source and tests.
-    /// </summary>
+    /// <summary>Account boundary. Passwords are transient and must never be persisted.</summary>
     public interface IStremioAccountService
     {
+        Task SignInAsync(string email, string password, CancellationToken cancellationToken);
         Task<AccountSessionState> GetSessionStateAsync(CancellationToken cancellationToken);
         Task SignOutAsync(CancellationToken cancellationToken);
     }
