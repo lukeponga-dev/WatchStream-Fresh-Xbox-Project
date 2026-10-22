@@ -114,8 +114,14 @@ namespace WatchStream.Xbox.Services
                 try
                 {
                     var manifest = new Uri(addon.ManifestUrl);
-                    var basePath = manifest.AbsoluteUri.Substring(0, manifest.AbsoluteUri.Length - "manifest.json".Length);
-                    var streamUrl = basePath + "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json";
+                    var baseBuilder = new UriBuilder(manifest)
+                    {
+                        Path = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length),
+                        Query = string.Empty,
+                        Fragment = string.Empty
+                    };
+                    var baseUri = baseBuilder.Uri;
+                    var streamUrl = new Uri(baseUri, "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json");
                     using (var response = await Http.GetAsync(streamUrl, cancellationToken))
                     {
                         if (!response.IsSuccessStatusCode) continue;
@@ -129,7 +135,10 @@ namespace WatchStream.Xbox.Services
                                     (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)) continue;
                                 var title = GetString(stream, "name") ?? GetString(stream, "title") ?? "Stream";
                                 var description = GetString(stream, "description") ?? string.Empty;
-                                var behavior = stream.TryGetProperty("behaviorHints", out var hints) ? GetString(hints, "videoHash") : null;
+                                var behavior = GetString(stream, "quality");
+                                if (string.IsNullOrWhiteSpace(behavior) &&
+                                    stream.TryGetProperty("behaviorHints", out var hints))
+                                    behavior = GetString(hints, "quality");
                                 sources.Add(new StreamSource
                                 {
                                     Name = title,
