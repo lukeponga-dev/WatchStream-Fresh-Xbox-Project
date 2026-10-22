@@ -9,59 +9,38 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <StackPanel Orientation="Horizontal" Spacing="12">
-            <Border Width="8" Height="38" Background="{StaticResource AccentBrush}" />
+        <StackPanel Orientation="Horizontal">
+            <Border Width="8" Height="38" Background="{StaticResource AccentBrush}" Margin="0,0,12,0" />
             <StackPanel>
-                <TextBlock Text="WATCHSTREAM" FontSize="26" FontWeight="Bold"
-                           Foreground="{StaticResource PrimaryTextBrush}" />
-                <TextBlock Text="XBOX • FRESH FOUNDATION" FontSize="12"
-                           Foreground="{StaticResource SecondaryTextBrush}" />
+                <TextBlock Text="WATCHSTREAM" FontSize="26" FontWeight="Bold" Foreground="{StaticResource PrimaryTextBrush}" />
+                <TextBlock Text="XBOX • FRESH FOUNDATION" FontSize="12" Foreground="{StaticResource SecondaryTextBrush}" />
             </StackPanel>
         </StackPanel>
-
         <Grid Grid.Row="1" Margin="0,42,0,24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.4*" />
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center" Spacing="18" Margin="0,0,36,0">
-                <TextBlock Text="Your media,&#10;your way." FontSize="42" FontWeight="SemiBold"
-                           TextWrapping="Wrap" Foreground="{StaticResource PrimaryTextBrush}" />
-                <TextBlock Text="A controller-first Stremio client is taking shape."
-                           FontSize="18" TextWrapping="Wrap"
-                           Foreground="{StaticResource SecondaryTextBrush}" />
-                <Button x:Name="ExploreButton" Content="Explore foundation"
-                        HorizontalAlignment="Left" MinWidth="210" MinHeight="54"
-                        Background="{StaticResource AccentBrush}" Foreground="White"
-                        Click="ExploreButton_Click" />
-                <TextBlock x:Name="StatusText" Text="Foundation build • No account connected"
-                           FontSize="13" TextWrapping="Wrap"
-                           Foreground="{StaticResource SecondaryTextBrush}" />
+            <StackPanel VerticalAlignment="Center" Margin="0,0,36,0">
+                <TextBlock Text="Your media,&#10;your way." FontSize="42" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{StaticResource PrimaryTextBrush}" />
+                <TextBlock Text="A controller-first Stremio client is taking shape." FontSize="18" TextWrapping="Wrap" Margin="0,18,0,0" Foreground="{StaticResource SecondaryTextBrush}" />
+                <Button x:Name="ExploreButton" Content="Explore foundation" HorizontalAlignment="Left" MinWidth="210" MinHeight="54" Margin="0,18,0,0" Background="{StaticResource AccentBrush}" Foreground="White" Click="ExploreButton_Click" />
+                <TextBlock x:Name="StatusText" Text="Foundation build • No account connected" FontSize="13" TextWrapping="Wrap" Margin="0,18,0,0" Foreground="{StaticResource SecondaryTextBrush}" />
             </StackPanel>
-
-            <Border Grid.Column="1" Background="{StaticResource PanelBackgroundBrush}"
-                    CornerRadius="18" Padding="28">
-                <StackPanel VerticalAlignment="Center" Spacing="20">
-                    <TextBlock Text="COMING TO WATCHSTREAM" FontSize="13" FontWeight="Bold"
-                               Foreground="{StaticResource AccentBrush}" />
-                    <TextBlock Text="Browse" FontSize="25" Foreground="{StaticResource PrimaryTextBrush}" />
-                    <TextBlock Text="Discover catalogs and media details." FontSize="15"
-                               Foreground="{StaticResource SecondaryTextBrush}" />
-                    <Rectangle Height="1" Fill="#353B49" />
-                    <TextBlock Text="Connect" FontSize="25" Foreground="{StaticResource PrimaryTextBrush}" />
-                    <TextBlock Text="Use a verified Stremio sign-in flow." FontSize="15"
-                               Foreground="{StaticResource SecondaryTextBrush}" />
-                    <Rectangle Height="1" Fill="#353B49" />
-                    <TextBlock Text="Play" FontSize="25" Foreground="{StaticResource PrimaryTextBrush}" />
-                    <TextBlock Text="Check stream compatibility before playback." FontSize="15"
-                               Foreground="{StaticResource SecondaryTextBrush}" />
+            <Border Grid.Column="1" Background="{StaticResource PanelBackgroundBrush}" CornerRadius="18" Padding="28">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="COMING TO WATCHSTREAM" FontSize="13" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="Browse" FontSize="25" Margin="0,18,0,0" Foreground="{StaticResource PrimaryTextBrush}" />
+                    <TextBlock Text="Discover catalogs and media details." FontSize="15" Foreground="{StaticResource SecondaryTextBrush}" />
+                    <Rectangle Height="1" Fill="#353B49" Margin="0,18,0,0" />
+                    <TextBlock Text="Connect" FontSize="25" Margin="0,18,0,0" Foreground="{StaticResource PrimaryTextBrush}" />
+                    <TextBlock Text="Use a verified Stremio sign-in flow." FontSize="15" Foreground="{StaticResource SecondaryTextBrush}" />
+                    <Rectangle Height="1" Fill="#353B49" Margin="0,18,0,0" />
+                    <TextBlock Text="Play" FontSize="25" Margin="0,18,0,0" Foreground="{StaticResource PrimaryTextBrush}" />
+                    <TextBlock Text="Check stream compatibility before playback." FontSize="15" Foreground="{StaticResource SecondaryTextBrush}" />
                 </StackPanel>
             </Border>
         </Grid>
-
-        <TextBlock Grid.Row="2"
-                   Text="EARLY DEVELOPMENT BUILD  •  NOT CONNECTED TO STREMIO"
-                   FontSize="11" Foreground="{StaticResource SecondaryTextBrush}" />
+        <TextBlock Grid.Row="2" Text="EARLY DEVELOPMENT BUILD  •  NOT CONNECTED TO STREMIO" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}" />
     </Grid>
 </Page>
