@@ -103,7 +103,7 @@
                     </Border>
                 </Grid>
 
-                <Border Grid.Row="1" CornerRadius="20" Background="#18231A" BorderBrush="#35452E" BorderThickness="1" Padding="30" Clip="True">
+                <Border Grid.Row="1" CornerRadius="20" Background="#18231A" BorderBrush="#35452E" BorderThickness="1" Padding="30">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1.2*"/>
