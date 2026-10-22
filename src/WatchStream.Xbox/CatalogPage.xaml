@@ -86,5 +86,31 @@
             </Border>
             <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock x:Name="StatusText" Text="Ready" FontSize="13" Foreground="#9BA8C7" VerticalAlignment="Center" TextWrapping="Wrap"/><TextBlock Grid.Column="1" Text="WATCHSTREAM  •  XBOX ONE" FontSize="11" Foreground="#657493" VerticalAlignment="Center"/></Grid>
         </Grid>
+        <Grid x:Name="DetailsOverlay" Grid.ColumnSpan="2" Background="#050B1B" Visibility="Collapsed" Padding="28">
+            <Grid RowSpacing="18">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Button x:Name="DetailsBackButton" Content="‹   Back to results" Click="DetailsBackButton_Click" HorizontalAlignment="Left" MinHeight="46" Padding="16,0" Background="#10264B" Foreground="White" TabIndex="20"/>
+                <Border Grid.Row="1" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="24">
+                    <Grid ColumnSpacing="24">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border Background="#14285A" CornerRadius="12" Clip="True"><Image x:Name="DetailsPoster" Stretch="UniformToFill"/></Border>
+                        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="TITLE DETAILS" FontSize="12" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="150"/>
+                                <TextBlock x:Name="DetailsTitle" FontSize="36" FontWeight="Bold" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12"><TextBlock x:Name="DetailsYear" FontSize="15" Foreground="#B7C2DC"/><TextBlock Text="•" Foreground="#7181A2"/><TextBlock x:Name="DetailsType" FontSize="15" Foreground="#B7C2DC"/></StackPanel>
+                                <TextBlock x:Name="DetailsDescription" FontSize="17" Foreground="#D5DDF1" TextWrapping="Wrap"/>
+                                <TextBlock Text="WATCH OPTIONS" FontSize="12" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="130" Margin="0,10,0,0"/>
+                                <Border Background="#101F3A" BorderBrush="#183B70" BorderThickness="1" CornerRadius="10" Padding="16">
+                                    <StackPanel Spacing="8"><TextBlock Text="Streaming sources" FontSize="17" FontWeight="SemiBold"/><TextBlock x:Name="DetailsSourceStatus" Text="Compatible Stremio add-ons are needed to find streams." FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap"/></StackPanel>
+                                </Border>
+                                <StackPanel Orientation="Horizontal" Spacing="12"><Button x:Name="DetailsPlayButton" Content="▶   Find streams" Click="DetailsPlayButton_Click" MinWidth="170" MinHeight="52" FontSize="16" Background="#5268FF" Foreground="White" TabIndex="21"/><Button Content="＋   Add to Library" Click="DetailsLibraryButton_Click" MinWidth="165" MinHeight="52" FontSize="16" Background="#10264B" Foreground="White" TabIndex="22"/></StackPanel>
+                                <TextBlock x:Name="DetailsActionStatus" FontSize="14" Foreground="#9BA8C7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>
