@@ -93,7 +93,7 @@
                 <Border Grid.Row="1" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="24">
                     <Grid ColumnSpacing="24">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <Border Background="#14285A" CornerRadius="12" Clip="True"><Image x:Name="DetailsPoster" Stretch="UniformToFill"/></Border>
+                        <Border Background="#14285A" CornerRadius="12"><Image x:Name="DetailsPoster" Stretch="UniformToFill"/></Border>
                         <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
                             <StackPanel Spacing="14">
                                 <TextBlock Text="TITLE DETAILS" FontSize="12" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="150"/>
