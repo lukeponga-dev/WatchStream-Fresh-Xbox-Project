@@ -1,17 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using WatchStream.Core.Models;
+using WatchStream.Xbox.Services;
 
 namespace WatchStream.Xbox
 {
     public sealed partial class CatalogPage : Page
     {
         private string _section = "Library";
+        private string _filter = "All";
         private bool _isLoading;
-        public CatalogPage() { InitializeComponent(); }
+        private readonly ObservableCollection<MediaItem> _items = new ObservableCollection<MediaItem>();
+        private List<MediaItem> _allItems = new List<MediaItem>();
+        private StremioCatalogService? _catalogService;
+        private CancellationTokenSource? _loadCancellation;
+
+        public CatalogPage()
+        {
+            InitializeComponent();
+            MediaGrid.ItemsSource = _items;
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -25,33 +42,36 @@ namespace WatchStream.Xbox
         private void ConfigureSection()
         {
             if (PageTitle == null) return;
-            switch (_section)
-            {
-                case "Discover":
-                    PageTitle.Text = "Discover"; PageSubtitle.Text = "Explore catalogs and find your next watch"; EmptyIcon.Text = "✦";
-                    EmptyTitle.Text = "Nothing to discover yet"; EmptyDescription.Text = "Connect a compatible Stremio catalog to browse available movies and series. No catalog data is loaded until a source is configured."; LoadingText.Text = "Loading discover catalogs…"; break;
-                case "Series":
-                    PageTitle.Text = "Series"; PageSubtitle.Text = "Browse TV and episodic content"; EmptyIcon.Text = "▣";
-                    EmptyTitle.Text = "No series to show yet"; EmptyDescription.Text = "Connect a compatible catalog to browse series and episodes."; LoadingText.Text = "Loading series…"; break;
-                default:
-                    PageTitle.Text = "My Library"; PageSubtitle.Text = "Your saved movies and series"; EmptyIcon.Text = "▤";
-                    EmptyTitle.Text = "Your library is waiting"; EmptyDescription.Text = "Connect a supported account or catalog source to see your saved titles here."; LoadingText.Text = "Loading your library…"; break;
-            }
+            bool discover = _section == "Discover";
+            PageTitle.Text = discover ? "Discover" : _section == "Series" ? "Series" : "My Library";
+            PageSubtitle.Text = discover ? "Explore popular movies and series" : _section == "Series" ? "Your saved TV series" : "Your saved movies and series";
+            EmptyIcon.Text = discover ? "✦" : "▤";
+            EmptyTitle.Text = discover ? "No titles found" : "Your library is empty";
+            EmptyDescription.Text = discover
+                ? "No catalog items were returned. Try again when you're connected to the internet."
+                : "Your Stremio account has no saved titles yet. Discover movies and series to find something to watch.";
+            LoadingText.Text = discover ? "Loading discover catalogs…" : "Loading your library…";
             SetNavState(LibraryNavButton, _section == "Library");
             SetNavState(DiscoverNavButton, _section == "Discover");
             SetNavState(SeriesNavButton, _section == "Series");
+            AllFilterButton.Content = discover ? "Movies" : "All";
+            MoviesFilterButton.Content = discover ? "Series" : "Movies";
+            SeriesFilterButton.Visibility = discover ? Visibility.Collapsed : Visibility.Visible;
+            _filter = "All";
+            UpdateFilterButtons();
         }
 
         private void SetNavState(Button button, bool selected)
         {
-            button.Background = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 38, 52, 82));
-            button.Foreground = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 7, 17, 29) : Windows.UI.Color.FromArgb(255, 245, 247, 255));
+            button.Background = new SolidColorBrush(Color.FromArgb(255, selected ? (byte)57 : (byte)38, selected ? (byte)214 : (byte)52, selected ? (byte)197 : (byte)82));
+            button.Foreground = new SolidColorBrush(Color.FromArgb(255, selected ? (byte)7 : (byte)245, selected ? (byte)17 : (byte)247, selected ? (byte)29 : (byte)255));
             button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
-            button.BorderBrush = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 42, 56, 88));
+            button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, selected ? (byte)57 : (byte)42, selected ? (byte)214 : (byte)56, selected ? (byte)197 : (byte)88));
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            _catalogService = new StremioCatalogService(new SecureSessionStore());
             Button initial = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
             initial.Focus(FocusState.Programmatic);
             _ = LoadSectionAsync();
@@ -59,30 +79,126 @@ namespace WatchStream.Xbox
 
         private async Task LoadSectionAsync()
         {
-            if (_isLoading) return;
-            _isLoading = true; ShowState(LoadingPanel); StatusText.Text = "Loading " + _section.ToLowerInvariant() + "…";
+            if (_isLoading || _catalogService == null) return;
+            _isLoading = true;
+            _loadCancellation?.Cancel(); _loadCancellation?.Dispose();
+            _loadCancellation = new CancellationTokenSource();
+            var token = _loadCancellation.Token;
+            ShowState(LoadingPanel);
+            StatusText.Text = _section == "Discover" ? "Loading public catalogs…" : "Loading your Stremio library…";
             try
             {
-                await Task.Delay(350);
-                ShowState(EmptyPanel);
-                StatusText.Text = "No catalog source connected. Your data has not been changed.";
-                // Keep focus in the left navigation rather than on a button that appears after loading.
-                Button nav = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
-                nav.Focus(FocusState.Programmatic);
+                IReadOnlyList<MediaItem> result;
+                if (_section == "Discover")
+                {
+                    var movies = await _catalogService.GetDiscoverAsync("movie", token);
+                    var series = await _catalogService.GetDiscoverAsync("series", token);
+                    result = movies.Concat(series).ToList();
+                }
+                else
+                {
+                    result = await _catalogService.GetLibraryAsync(token);
+                    if (_section == "Series") result = result.Where(x => string.Equals(x.Type, "series", StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                _allItems = result.ToList();
+                ApplyFilters();
+                if (_allItems.Count == 0)
+                {
+                    ShowState(EmptyPanel);
+                    StatusText.Text = _section == "Discover" ? "The catalog returned no titles." : "No saved titles in this section.";
+                    initialFocus();
+                }
+                else
+                {
+                    ShowState(ResultsPanel);
+                    StatusText.Text = _allItems.Count + " titles loaded.";
+                    if (MediaGrid.Focus(FocusState.Programmatic)) { }
+                    else initialFocus();
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (InvalidOperationException ex)
+            {
+                ErrorDescription.Text = ex.Message;
+                ShowState(ErrorPanel);
+                StatusText.Text = "Unable to load " + _section.ToLowerInvariant() + ".";
+                if (ex.Message.IndexOf("Connect your Stremio", StringComparison.OrdinalIgnoreCase) >= 0)
+                    ConnectAccountButton.Focus(FocusState.Programmatic);
+                else RetryButton.Focus(FocusState.Programmatic);
             }
             catch (Exception)
             {
-                ErrorDescription.Text = "The section couldn't be loaded. Check your connection or catalog setup, then try again.";
+                ErrorDescription.Text = _section == "Discover"
+                    ? "Discover couldn't reach the catalog provider. Check your connection and retry."
+                    : "Couldn't read your Stremio library. Reconnect your account if the problem continues.";
                 ShowState(ErrorPanel); StatusText.Text = "Unable to load " + _section.ToLowerInvariant() + ".";
                 RetryButton.Focus(FocusState.Programmatic);
             }
             finally { _isLoading = false; }
         }
 
-        private void ShowState(StackPanel stateToShow)
+        private void initialFocus()
         {
-            LoadingPanel.Visibility = Visibility.Collapsed; EmptyPanel.Visibility = Visibility.Collapsed; ErrorPanel.Visibility = Visibility.Collapsed;
-            stateToShow.Visibility = Visibility.Visible;
+            Button nav = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
+            nav.Focus(FocusState.Programmatic);
+        }
+
+        private void ApplyFilters()
+        {
+            IEnumerable<MediaItem> query = _allItems;
+            if (_section == "Discover")
+            {
+                string type = _filter == "Series" ? "series" : "movie";
+                query = query.Where(x => string.Equals(x.Type, type, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (_filter == "Movies") query = query.Where(x => string.Equals(x.Type, "movie", StringComparison.OrdinalIgnoreCase));
+            else if (_filter == "Series") query = query.Where(x => string.Equals(x.Type, "series", StringComparison.OrdinalIgnoreCase));
+
+            var search = SearchBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(x => x.Name.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0);
+            _items.Clear();
+            foreach (var item in query) _items.Add(item);
+            if (ResultsPanel.Visibility == Visibility.Visible)
+                StatusText.Text = _items.Count + " titles shown.";
+        }
+
+        private void UpdateFilterButtons()
+        {
+            SetFilterButton(AllFilterButton, _filter == "All" || (_section == "Discover" && _filter == "Movies"));
+            SetFilterButton(MoviesFilterButton, _filter == "Movies" || (_section == "Discover" && _filter == "Series"));
+            SetFilterButton(SeriesFilterButton, _filter == "Series");
+        }
+
+        private void SetFilterButton(Button button, bool selected)
+        {
+            button.Background = new SolidColorBrush(selected ? Color.FromArgb(255, 57, 214, 197) : Color.FromArgb(255, 38, 52, 82));
+            button.Foreground = new SolidColorBrush(selected ? Color.FromArgb(255, 7, 17, 29) : Color.FromArgb(255, 245, 247, 255));
+        }
+
+        private void AllFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            _filter = _section == "Discover" ? "Movies" : "All";
+            UpdateFilterButtons(); ApplyFilters();
+        }
+        private void MoviesFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            _filter = _section == "Discover" ? "Series" : "Movies";
+            UpdateFilterButtons(); ApplyFilters();
+        }
+        private void SeriesFilterButton_Click(object sender, RoutedEventArgs e) { _filter = "Series"; UpdateFilterButtons(); ApplyFilters(); }
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) { if (_allItems.Count > 0) ApplyFilters(); }
+
+        private void MediaCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is MediaItem item)
+                StatusText.Text = item.Name + " selected. Playback and details are the next integration step.";
+        }
+        private void MediaGrid_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is MediaItem item)
+                StatusText.Text = item.Name + " selected. Playback and details are the next integration step.";
         }
 
         private void Control_GotFocus(object sender, RoutedEventArgs e)
@@ -90,9 +206,9 @@ namespace WatchStream.Xbox
             if (sender is Button button)
             {
                 button.BorderThickness = new Thickness(3);
-                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197));
+                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 57, 214, 197));
                 if (button != LibraryNavButton && button != DiscoverNavButton && button != SeriesNavButton && button != ConnectAccountButton)
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 45, 65, 98));
+                    button.Background = new SolidColorBrush(Color.FromArgb(255, 45, 65, 98));
             }
         }
 
@@ -103,26 +219,40 @@ namespace WatchStream.Xbox
                 if (button == LibraryNavButton || button == DiscoverNavButton || button == SeriesNavButton)
                 {
                     bool selected = (button == LibraryNavButton && _section == "Library") || (button == DiscoverNavButton && _section == "Discover") || (button == SeriesNavButton && _section == "Series");
-                    button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
-                    button.BorderBrush = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 42, 56, 88));
-                    button.Background = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 38, 52, 82));
-                    button.Foreground = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 7, 17, 29) : Windows.UI.Color.FromArgb(255, 245, 247, 255));
+                    SetNavState(button, selected);
                 }
                 else
                 {
                     button.BorderThickness = new Thickness(1);
-                    button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 42, 56, 88));
-                    button.Background = button == ConnectAccountButton || button == RetryButton ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197)) : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 38, 52, 82));
+                    button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 42, 56, 88));
+                    if (button == ConnectAccountButton || button == RetryButton)
+                        button.Background = new SolidColorBrush(Color.FromArgb(255, 57, 214, 197));
+                    else if (button == AllFilterButton || button == MoviesFilterButton || button == SeriesFilterButton)
+                        UpdateFilterButtons();
+                    else button.Background = new SolidColorBrush(Color.FromArgb(255, 38, 52, 82));
                 }
             }
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadSectionAsync();
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isLoading = false;
+            _ = LoadSectionAsync();
+        }
+
         private void HomeButton_Click(object sender, RoutedEventArgs e) { if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage)); }
         private void LibraryTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Library") Frame?.Navigate(typeof(CatalogPage), "Library"); }
         private void DiscoverTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Discover") Frame?.Navigate(typeof(CatalogPage), "Discover"); }
         private void SeriesButton_Click(object sender, RoutedEventArgs e) { if (_section != "Series") Frame?.Navigate(typeof(CatalogPage), "Series"); }
         private void ConnectButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AccountPage));
         private void SettingsButton_Click(object sender, RoutedEventArgs e) { StatusText.Text = "Settings is planned for a later milestone."; }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            _loadCancellation?.Cancel();
+            _loadCancellation?.Dispose();
+            _loadCancellation = null;
+            base.OnNavigatedFrom(e);
+        }
     }
 }
