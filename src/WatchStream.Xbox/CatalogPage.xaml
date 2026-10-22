@@ -47,7 +47,7 @@
                     <StackPanel x:Name="ErrorPanel" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="650" Spacing="16">
                         <TextBlock Text="!" FontSize="54" FontWeight="Bold" Foreground="#FF8FA3" HorizontalAlignment="Center"/><TextBlock Text="We couldn't load this section" FontSize="27" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap"/>
                         <TextBlock x:Name="ErrorDescription" Text="Check your connection and try again." FontSize="17" Foreground="#B7C2DC" TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap"/>
-                        <Button x:Name="RetryButton" Content="Retry" Click="RefreshButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="170" MinHeight="54" FontSize="17" Background="#39D6C5" Foreground="#07111D" IsTabStop="True" TabIndex="8" UseSystemFocusVisuals="True"/>
+                        <Button x:Name="RetryButton" Content="Retry" Click="ErrorActionButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinWidth="170" MinHeight="54" FontSize="17" Background="#39D6C5" Foreground="#07111D" IsTabStop="True" TabIndex="8" UseSystemFocusVisuals="True"/>
                     </StackPanel>
                     <Grid x:Name="ResultsPanel" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
