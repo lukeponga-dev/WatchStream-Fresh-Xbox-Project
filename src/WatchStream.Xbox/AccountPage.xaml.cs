@@ -192,7 +192,7 @@ namespace WatchStream.Xbox
 
         private void HomeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage));
+            Frame?.Navigate(typeof(MainPage));
         }
     }
 }
