@@ -1,6 +1,7 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -20,6 +21,7 @@ namespace WatchStream.Xbox
         {
             InitializeComponent();
 
+            this.RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             Suspending += OnSuspending;
         }
 
@@ -33,6 +35,9 @@ namespace WatchStream.Xbox
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
                 rootFrame.NavigationFailed += OnNavigationFailed;
+
+                // Register for the back button
+                SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
@@ -54,6 +59,18 @@ namespace WatchStream.Xbox
 
                 // Ensure the current window is active
                 Window.Current.Activate();
+            }
+        }
+
+        /// <summary>
+        /// Invoked when the 'B' button or back navigation is requested.
+        /// </summary>
+        private void OnBackRequested(object sender, BackRequestedEventArgs e)
+        {
+            if (Window.Current.Content is Frame rootFrame && rootFrame.CanGoBack)
+            {
+                e.Handled = true;
+                rootFrame.GoBack();
             }
         }
 

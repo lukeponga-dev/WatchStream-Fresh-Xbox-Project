@@ -6,7 +6,7 @@
     Foreground="#F5F7FF"
     Loaded="Page_Loaded">
 
-    <Grid Padding="56,36,56,32">
+    <Grid Padding="56,36,56,32" XYFocusKeyboardNavigation="Enabled">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="24"/>
@@ -62,12 +62,14 @@
                                 IsTabStop="True" TabIndex="0" MinWidth="190" MinHeight="58"
                                 FontSize="18" FontWeight="SemiBold"
                                 Background="#39D6C5" Foreground="#07111D"
-                                UseSystemFocusVisuals="True"/>
+                                UseSystemFocusVisuals="True"
+                                XYFocusDown="{x:Bind LibraryButton}"/>
                         <Button x:Name="ConnectButton" Content="Connect Stremio" Click="ConnectButton_Click"
                                 IsTabStop="True" TabIndex="1" MinWidth="190" MinHeight="58"
                                 FontSize="18" FontWeight="SemiBold"
                                 Background="#263452" Foreground="#F5F7FF"
-                                UseSystemFocusVisuals="True"/>
+                                UseSystemFocusVisuals="True"
+                                XYFocusDown="{x:Bind DiscoverButton}"/>
                     </StackPanel>
                 </StackPanel>
                 <Grid Grid.Column="1" Margin="24,0,0,0">
@@ -107,10 +109,11 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Click="LibraryButton_Click" TabIndex="2" IsTabStop="True"
+            <Button x:Name="LibraryButton" Grid.Column="0" Click="LibraryButton_Click" TabIndex="2" IsTabStop="True"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                    Padding="0" MinHeight="190">
+                    Padding="0" MinHeight="190"
+                    XYFocusUp="{x:Bind BrowseButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="▤" FontSize="38" Foreground="#39D6C5"/>
                     <TextBlock Text="My Library" FontSize="21" FontWeight="Bold"/>
@@ -119,10 +122,11 @@
                 </StackPanel>
             </Button>
 
-            <Button Grid.Column="1" Click="DiscoverButton_Click" TabIndex="3" IsTabStop="True"
+            <Button x:Name="DiscoverButton" Grid.Column="1" Click="DiscoverButton_Click" TabIndex="3" IsTabStop="True"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                    Padding="0" MinHeight="190">
+                    Padding="0" MinHeight="190"
+                    XYFocusUp="{x:Bind ConnectButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="✦" FontSize="38" Foreground="#F6B94A"/>
                     <TextBlock Text="Discover" FontSize="21" FontWeight="Bold"/>
@@ -131,10 +135,11 @@
                 </StackPanel>
             </Button>
 
-            <Button Grid.Column="2" Click="SeriesButton_Click" TabIndex="4" IsTabStop="True"
+            <Button x:Name="SeriesButton" Grid.Column="2" Click="SeriesButton_Click" TabIndex="4" IsTabStop="True"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                    Padding="0" MinHeight="190">
+                    Padding="0" MinHeight="190"
+                    XYFocusUp="{x:Bind ConnectButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="▣" FontSize="38" Foreground="#A995FF"/>
                     <TextBlock Text="Series" FontSize="21" FontWeight="Bold"/>
@@ -143,10 +148,11 @@
                 </StackPanel>
             </Button>
 
-            <Button Grid.Column="3" Click="SettingsButton_Click" TabIndex="5" IsTabStop="True"
+            <Button x:Name="SettingsButton" Grid.Column="3" Click="SettingsButton_Click" TabIndex="5" IsTabStop="True"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                    Padding="0" MinHeight="190">
+                    Padding="0" MinHeight="190"
+                    XYFocusUp="{x:Bind ConnectButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="⚙" FontSize="38" Foreground="#FF8FA3"/>
                     <TextBlock Text="Settings" FontSize="21" FontWeight="Bold"/>
