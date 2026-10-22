@@ -51,7 +51,7 @@
                                                 <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                                 <TextBlock Text="{Binding Description}" FontSize="13" Foreground="#A9B5D1" TextWrapping="Wrap" MaxLines="2"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="10"><TextBlock Text="{Binding Version}" FontSize="12" Foreground="#9BA8C7"/><TextBlock Text="{Binding ManifestUrl}" FontSize="11" Foreground="#7181A2" TextTrimming="CharacterEllipsis"/></StackPanel>
-                                                <StackPanel Orientation="Horizontal" Spacing="8"><Border Background="#123C38" CornerRadius="5" Padding="6,3"><TextBlock Text="Catalogs" FontSize="11" Foreground="#75E5D3"/></Border><Border Background="#18295A" CornerRadius="5" Padding="6,3"><TextBlock Text="Streams" FontSize="11" Foreground="#A9B8FF"/></Border></StackPanel>
+                                                <TextBlock Text="{Binding Capabilities}" FontSize="12" Foreground="#75E5D3" TextWrapping="Wrap"/>
                                             </StackPanel>
                                             <Button Grid.Column="1" Content="Remove" Tag="{Binding ManifestUrl}" Click="RemoveButton_Click" VerticalAlignment="Center" MinWidth="100" MinHeight="44" Background="#422033" Foreground="#FFD8E1" TabIndex="10"/>
                                         </Grid>
