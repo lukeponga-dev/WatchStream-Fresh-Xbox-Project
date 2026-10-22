@@ -22,8 +22,11 @@
   </Properties>
 
  <Dependencies>
+
+	 <!-- Targets universal windows -->
+	 <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
 	  <!-- targets xbox  -->
-	  <TargetDeviceFamily Name="Windows.Xbox" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+	  <TargetDeviceFamily Name="Windows.Xbox" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 	
   <Resources>
