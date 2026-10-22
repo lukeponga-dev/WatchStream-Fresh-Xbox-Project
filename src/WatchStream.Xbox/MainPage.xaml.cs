@@ -1,6 +1,12 @@
-﻿using Windows.UI.Xaml;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using WatchStream.Core.Models;
+using WatchStream.Xbox.Services;
 
 namespace WatchStream.Xbox
 {
@@ -8,12 +14,48 @@ namespace WatchStream.Xbox
     {
         public MainPage() { InitializeComponent(); }
 
+        private bool _homeCatalogLoading;
+
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             HomeNavButton.Focus(FocusState.Programmatic);
-            StatusText.Text = "Ready. Use the D-pad or left stick to move, then press A to select.";
+            StatusText.Text = "Loading movie and series recommendations...";
+            _ = LoadHomeCatalogAsync();
         }
 
+        private async Task LoadHomeCatalogAsync()
+        {
+            if (_homeCatalogLoading) return;
+            _homeCatalogLoading = true;
+            try
+            {
+                var catalog = new StremioCatalogService(new SecureSessionStore());
+                var movies = await catalog.GetDiscoverAsync("movie", CancellationToken.None);
+                var series = await catalog.GetDiscoverAsync("series", CancellationToken.None);
+                var items = movies.Concat(series)
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Poster))
+                    .GroupBy(item => item.Id, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => group.First())
+                    .Take(12)
+                    .ToList();
+                HomeMediaItems.ItemsSource = items;
+                StatusText.Text = items.Count == 0 ? "No catalog posters available right now. Open Discover to retry." : "Loaded " + items.Count + " movie and series recommendations.";
+            }
+            catch (Exception)
+            {
+                StatusText.Text = "Recommendations could not load. Open Discover to try again.";
+            }
+            finally { _homeCatalogLoading = false; }
+        }
+
+        private void HomeMediaCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is MediaItem item)
+            {
+                StatusText.Text = item.Name + " selected. Opening Discover for more details.";
+                NavigateToCatalog("Discover");
+            }
+        }
         private void Control_GotFocus(object sender, RoutedEventArgs e)
         {
             if (sender is Button button)
