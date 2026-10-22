@@ -1,0 +1,121 @@
+﻿<Page
+    x:Class="WatchStream.Xbox.CatalogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="#0B1020"
+    Foreground="#F5F7FF"
+    Loaded="Page_Loaded">
+
+    <Grid Padding="48,30,48,28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="26"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Border Width="42" Height="42" CornerRadius="11" Background="#39D6C5">
+                    <TextBlock Text="W" FontSize="25" FontWeight="Bold" Foreground="#07111D"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="WATCHSTREAM" FontSize="21" FontWeight="Bold" CharacterSpacing="100"/>
+                    <TextBlock Text="YOUR MEDIA, YOUR WAY" FontSize="10" Foreground="#9BA8C7" CharacterSpacing="130"/>
+                </StackPanel>
+            </StackPanel>
+            <Button Grid.Column="1" Content="Home" Click="HomeButton_Click"
+                    MinWidth="120" MinHeight="48" FontSize="16"
+                    Background="#263452" Foreground="#F5F7FF"
+                    IsTabStop="True" TabIndex="0" UseSystemFocusVisuals="True"/>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="5" VerticalAlignment="Center">
+                <TextBlock x:Name="PageTitle" Text="My Library" FontSize="34" FontWeight="Bold"/>
+                <TextBlock x:Name="PageSubtitle" Text="Your saved movies and series"
+                           FontSize="16" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button x:Name="LibraryTabButton" Content="My Library" Click="LibraryTabButton_Click"
+                        MinWidth="135" MinHeight="48" FontSize="15" TabIndex="1"
+                        Background="#263452" Foreground="#F5F7FF" UseSystemFocusVisuals="True"/>
+                <Button x:Name="DiscoverTabButton" Content="Discover" Click="DiscoverTabButton_Click"
+                        MinWidth="135" MinHeight="48" FontSize="15" TabIndex="2"
+                        Background="#263452" Foreground="#F5F7FF" UseSystemFocusVisuals="True"/>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="4" CornerRadius="20" Background="#121B30"
+                BorderBrush="#263653" BorderThickness="1" Padding="28">
+            <Grid>
+                <StackPanel x:Name="LoadingPanel" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="18">
+                    <ProgressRing IsActive="True" Width="58" Height="58"/>
+                    <TextBlock x:Name="LoadingText" Text="Loading catalog…"
+                               FontSize="21" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Please wait" FontSize="15" Foreground="#9BA8C7"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel x:Name="EmptyPanel" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            MaxWidth="650" Spacing="16">
+                    <Border Width="84" Height="84" CornerRadius="42" Background="#1D2A45"
+                            HorizontalAlignment="Center">
+                        <TextBlock x:Name="EmptyIcon" Text="▤" FontSize="42" Foreground="#39D6C5"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock x:Name="EmptyTitle" Text="Your library is waiting"
+                               FontSize="28" FontWeight="Bold" TextAlignment="Center"
+                               HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="EmptyDescription"
+                               Text="Connect a supported catalog source to see your saved titles here."
+                               FontSize="17" Foreground="#B7C2DC" TextAlignment="Center"
+                               HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                    <Button x:Name="RefreshButton" Content="Try again" Click="RefreshButton_Click"
+                            MinWidth="170" MinHeight="54" FontSize="17" Margin="0,8,0,0"
+                            Background="#39D6C5" Foreground="#07111D"
+                            IsTabStop="True" TabIndex="3" UseSystemFocusVisuals="True"/>
+                </StackPanel>
+
+                <StackPanel x:Name="ErrorPanel" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            MaxWidth="650" Spacing="16">
+                    <TextBlock Text="!" FontSize="54" FontWeight="Bold" Foreground="#FF8FA3"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="We couldn't load this section" FontSize="27" FontWeight="Bold"
+                               TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ErrorDescription" Text="Check your connection and try again."
+                               FontSize="17" Foreground="#B7C2DC" TextAlignment="Center"
+                               HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                    <Button Content="Retry" Click="RefreshButton_Click" MinWidth="170" MinHeight="54"
+                            FontSize="17" Background="#39D6C5" Foreground="#07111D"
+                            IsTabStop="True" TabIndex="4" UseSystemFocusVisuals="True"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="5" Margin="0,18,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusText" Text="Ready" FontSize="13" Foreground="#9BA8C7"
+                       VerticalAlignment="Center" TextWrapping="Wrap"/>
+            <TextBlock Grid.Column="1" Text="D-PAD / LEFT STICK  •  A SELECT  •  B BACK"
+                       FontSize="12" Foreground="#657493" VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</Page>
