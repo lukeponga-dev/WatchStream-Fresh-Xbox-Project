@@ -24,6 +24,7 @@ namespace WatchStream.Xbox
         private List<MediaItem> _allItems = new List<MediaItem>();
         private StremioCatalogService? _catalogService;
         private CancellationTokenSource? _loadCancellation;
+        private CancellationTokenSource? _searchCancellation;
         private MediaItem? _selectedItem;
         private MediaItem? _pendingDetails;
 
@@ -215,7 +216,49 @@ namespace WatchStream.Xbox
             UpdateFilterButtons(); ApplyFilters();
         }
         private void SeriesFilterButton_Click(object sender, RoutedEventArgs e) { _filter = "Series"; UpdateFilterButtons(); ApplyFilters(); }
-        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) { if (_allItems.Count > 0) ApplyFilters(); }
+        private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_section != "Search")
+            {
+                if (_allItems.Count > 0) ApplyFilters();
+                return;
+            }
+
+            var term = SearchBox.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                _searchCancellation?.Cancel();
+                if (_allItems.Count > 0) ApplyFilters();
+                return;
+            }
+            if (_catalogService == null) return;
+
+            _searchCancellation?.Cancel();
+            _searchCancellation?.Dispose();
+            _searchCancellation = new CancellationTokenSource();
+            var token = _searchCancellation.Token;
+            try
+            {
+                await Task.Delay(350, token);
+                StatusText.Text = "Searching Stremio catalogs…";
+                var movies = await _catalogService.GetDiscoverAsync("movie", token, term);
+                var series = await _catalogService.GetDiscoverAsync("series", token, term);
+                token.ThrowIfCancellationRequested();
+                _allItems = movies.Concat(series)
+                    .GroupBy(item => item.Id, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => group.First())
+                    .ToList();
+                ApplyFilters();
+                ShowState(_items.Count > 0 ? ResultsPanel : EmptyPanel);
+                StatusText.Text = _items.Count + " search result(s) for “" + term + "”.";
+                if (_items.Count == 0) initialFocus();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception)
+            {
+                StatusText.Text = "Search failed. Check your connection and try again.";
+            }
+        }
 
         private void MediaCard_Click(object sender, RoutedEventArgs e)
         {
@@ -358,6 +401,9 @@ namespace WatchStream.Xbox
             _loadCancellation?.Cancel();
             _loadCancellation?.Dispose();
             _loadCancellation = null;
+            _searchCancellation?.Cancel();
+            _searchCancellation?.Dispose();
+            _searchCancellation = null;
             base.OnNavigatedFrom(e);
         }
     }
