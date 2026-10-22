@@ -97,7 +97,9 @@ namespace WatchStream.Xbox
         private void SearchButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(CatalogPage), "Search");
         private void LibraryButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(CatalogPage), "Library");
         private void DiscoverButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(CatalogPage), "Discover");
+        private void SeriesButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(CatalogPage), "Series");
+        private void AddonsButton_Click(object sender, RoutedEventArgs e) => StatusText.Text = "You are already on Add-ons.";
         private void ConnectButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AccountPage));
-        private void SettingsButton_Click(object sender, RoutedEventArgs e) => StatusText.Text = "Settings is planned for a later milestone.";
+        private void SettingsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(SettingsPage));
     }
 }
