@@ -57,7 +57,9 @@
                             <Button x:Name="SeriesFilterButton" Content="Series" Click="SeriesFilterButton_Click" MinWidth="100" MinHeight="42" Background="#263452" Foreground="#F5F7FF" TabIndex="8" UseSystemFocusVisuals="True"/>
                             <TextBox x:Name="SearchBox" PlaceholderText="Search titles" MinWidth="190" MinHeight="42" TextChanged="SearchBox_TextChanged" TabIndex="9" UseSystemFocusVisuals="True"/>
                         </StackPanel>
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <Grid Grid.Row="1">
+                            <TextBlock x:Name="FilteredEmptyText" Text="No matching titles. Try another filter or search." FontSize="19" Foreground="#A9B5D1" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Visibility="Collapsed"/>
+                            <ScrollViewer x:Name="MediaScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <GridView x:Name="MediaGrid" IsItemClickEnabled="True" ItemClick="MediaGrid_ItemClick" SelectionMode="None" IsTabStop="False" TabNavigation="Once">
                                 <GridView.ItemsPanel><ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="3"/></ItemsPanelTemplate></GridView.ItemsPanel>
                                 <GridView.ItemTemplate>
@@ -75,7 +77,8 @@
                                     </DataTemplate>
                                 </GridView.ItemTemplate>
                             </GridView>
-                        </ScrollViewer>
+                            </ScrollViewer>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Border>
