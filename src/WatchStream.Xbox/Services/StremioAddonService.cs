@@ -18,6 +18,7 @@ namespace WatchStream.Xbox.Services
         public string Version { get; set; } = string.Empty;
         public bool SupportsStreams { get; set; }
         public bool SupportsCatalogs { get; set; }
+        public string Capabilities => (SupportsCatalogs ? "Catalogs" : "No catalogs") + "  •  " + (SupportsStreams ? "Streams" : "No streams");
     }
 
     public sealed class StreamSource
