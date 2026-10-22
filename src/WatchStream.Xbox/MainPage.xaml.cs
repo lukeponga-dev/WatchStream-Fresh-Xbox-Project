@@ -19,10 +19,10 @@ namespace WatchStream.Xbox
             if (sender is Button button)
             {
                 button.BorderThickness = new Thickness(3);
-                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197));
+                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 255));
                 button.Opacity = 1.0;
-                if (button.Name != "BrowseButton")
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 45, 65, 98));
+                if (button.Name != "ConnectButton" && button.Name != "HomeNavButton")
+                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 35, 54, 100));
             }
         }
 
@@ -33,12 +33,28 @@ namespace WatchStream.Xbox
                 button.BorderThickness = new Thickness(1);
                 button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 42, 56, 88));
                 button.Opacity = 1.0;
-                button.Background = button.Name == "BrowseButton"
-                    ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197))
-                    : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 23, 33, 58));
-                if (button.Name == "ConnectButton")
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 38, 52, 82));
+                if (button.Name == "HomeNavButton")
+                {
+                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 52, 32, 167));
+                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                }
+                else if (button.Name == "ConnectButton")
+                {
+                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 23, 43, 77));
+                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                }
+                else
+                {
+                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 31, 58));
+                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 245, 247, 255));
+                }
             }
+        }
+
+        private void HomeNavButton_Click(object sender, RoutedEventArgs e)
+        {
+            StatusText.Text = "You're already on Home.";
+            HomeNavButton.Focus(FocusState.Programmatic);
         }
 
         private void NavigateToCatalog(string section) { if (Frame != null) Frame.Navigate(typeof(CatalogPage), section); }
