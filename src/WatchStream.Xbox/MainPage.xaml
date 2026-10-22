@@ -111,7 +111,7 @@
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                     Padding="0" MinHeight="190">
-                <StackPanel Padding="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="▤" FontSize="38" Foreground="#39D6C5"/>
                     <TextBlock Text="My Library" FontSize="21" FontWeight="Bold"/>
                     <TextBlock Text="Continue with your saved titles." FontSize="14"
@@ -123,7 +123,7 @@
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                     Padding="0" MinHeight="190">
-                <StackPanel Padding="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="✦" FontSize="38" Foreground="#F6B94A"/>
                     <TextBlock Text="Discover" FontSize="21" FontWeight="Bold"/>
                     <TextBlock Text="Find something new to watch." FontSize="14"
@@ -135,7 +135,7 @@
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                     Padding="0" MinHeight="190">
-                <StackPanel Padding="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="▣" FontSize="38" Foreground="#A995FF"/>
                     <TextBlock Text="Series" FontSize="21" FontWeight="Bold"/>
                     <TextBlock Text="Browse TV and episodic content." FontSize="14"
@@ -147,7 +147,7 @@
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                     Padding="0" MinHeight="190">
-                <StackPanel Padding="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="⚙" FontSize="38" Foreground="#FF8FA3"/>
                     <TextBlock Text="Settings" FontSize="21" FontWeight="Bold"/>
                     <TextBlock Text="Account, playback and app options." FontSize="14"
