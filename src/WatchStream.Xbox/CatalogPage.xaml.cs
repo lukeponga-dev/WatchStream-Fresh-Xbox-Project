@@ -344,14 +344,14 @@ namespace WatchStream.Xbox
             _ = LoadSectionAsync();
         }
 
-        private void HomeButton_Click(object sender, RoutedEventArgs e) { if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage)); }
+        private void HomeButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(MainPage));
         private void SearchTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Search") Frame?.Navigate(typeof(CatalogPage), "Search"); else SearchBox.Focus(FocusState.Programmatic); }
         private void AddonsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AddonsPage));
         private void LibraryTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Library") Frame?.Navigate(typeof(CatalogPage), "Library"); }
         private void DiscoverTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Discover") Frame?.Navigate(typeof(CatalogPage), "Discover"); }
         private void SeriesButton_Click(object sender, RoutedEventArgs e) { if (_section != "Series") Frame?.Navigate(typeof(CatalogPage), "Series"); }
         private void ConnectButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AccountPage));
-        private void SettingsButton_Click(object sender, RoutedEventArgs e) { StatusText.Text = "Settings is planned for a later milestone."; }
+        private void SettingsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(SettingsPage));
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
