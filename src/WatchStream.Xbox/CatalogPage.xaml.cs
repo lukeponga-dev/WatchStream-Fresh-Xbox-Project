@@ -136,9 +136,9 @@ namespace WatchStream.Xbox
                 {
                     ShowState(ResultsPanel);
                     StatusText.Text = _allItems.Count + " titles loaded.";
-                    if (_section == "Search") SearchBox.Focus(FocusState.Programmatic);
-                    else if (MediaGrid.Focus(FocusState.Programmatic)) { }
-                    else initialFocus();
+                    // Keep focus on the selected sidebar item after loading. This makes Xbox D-pad navigation predictable;
+                    // users can move right into the results when they are ready.
+                    initialFocus();
                 }
             }
             catch (OperationCanceledException) { }
