@@ -104,6 +104,35 @@ namespace WatchStream.Xbox
 
         private async void RefreshLinkButton_Click(object sender, RoutedEventArgs e) { await CreateAndShowLinkAsync(); }
 
+        private async void FacebookLoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Facebook credentials are entered only on Stremio's official site.
+            // Reuse the one-time device-link URL so approval completes this Xbox session.
+            if (string.IsNullOrWhiteSpace(_activeCode) || string.IsNullOrWhiteSpace(LinkUrlText.Text) ||
+                !Uri.TryCreate(LinkUrlText.Text, UriKind.Absolute, out var linkUri) ||
+                linkUri.Scheme != Uri.UriSchemeHttps ||
+                !string.Equals(linkUri.Host, "link.stremio.com", StringComparison.OrdinalIgnoreCase))
+            {
+                StatusText.Text = "Request a new Stremio link code first, then try Facebook sign-in again.";
+                await CreateAndShowLinkAsync();
+                return;
+            }
+
+            try
+            {
+                StatusText.Text = "Opening Stremio's secure account-link page. Sign in with Facebook there and approve the link.";
+                var launched = await Windows.System.Launcher.LaunchUriAsync(linkUri);
+                if (!launched)
+                    StatusText.Text = "Couldn't open the browser. Scan the QR code with your phone and choose Facebook sign-in on Stremio.";
+                else
+                    StatusText.Text = "Finish Facebook sign-in in the browser and approve the link. WatchStream will connect automatically.";
+            }
+            catch (Exception)
+            {
+                StatusText.Text = "Couldn't open the browser. Scan the QR code with your phone and choose Facebook sign-in on Stremio.";
+            }
+        }
+
         private void UseEmailButton_Click(object sender, RoutedEventArgs e)
         {
             _showingQr = false; QrPanel.Visibility = Visibility.Collapsed; SignedOutPanel.Visibility = Visibility.Visible;
