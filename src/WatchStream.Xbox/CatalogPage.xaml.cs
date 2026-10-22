@@ -228,6 +228,11 @@ namespace WatchStream.Xbox
             if (string.IsNullOrWhiteSpace(term))
             {
                 _searchCancellation?.Cancel();
+                if (_section == "Search" && !_isLoading && _catalogService != null)
+                {
+                    _ = LoadSectionAsync();
+                    return;
+                }
                 if (_allItems.Count > 0) ApplyFilters();
                 return;
             }
