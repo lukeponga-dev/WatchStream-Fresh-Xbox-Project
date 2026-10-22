@@ -1,0 +1,21 @@
+<Page
+    x:Class="WatchStream.Xbox.PlayerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="#050B1B" Foreground="#F5F7FF" Loaded="Page_Loaded">
+    <Grid RowSpacing="12" Margin="22,18,22,18">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid Grid.Row="0" ColumnSpacing="16">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Button Content="‹   Back" Click="BackButton_Click" MinWidth="120" MinHeight="48" Background="#10264B" Foreground="White" TabIndex="0"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                <TextBlock x:Name="PlayerTitle" Text="Now playing" FontSize="24" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="PlayerSubtitle" Text="Stream source" FontSize="13" Foreground="#A9B5D1" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Grid>
+        <Border Grid.Row="1" Background="#000000" BorderBrush="#183B70" BorderThickness="1" CornerRadius="12" Padding="4">
+            <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" AutoPlay="True" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Border>
+        <TextBlock Grid.Row="2" x:Name="PlayerStatus" Text="Preparing playback…" FontSize="13" Foreground="#9BA8C7" TextWrapping="Wrap"/>
+    </Grid>
+</Page>
