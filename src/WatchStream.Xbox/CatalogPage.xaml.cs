@@ -35,6 +35,7 @@ namespace WatchStream.Xbox
             base.OnNavigatedTo(e);
             var requestedSection = e.Parameter as string;
             _section = string.Equals(requestedSection, "Discover", StringComparison.OrdinalIgnoreCase) ? "Discover"
+                : string.Equals(requestedSection, "Search", StringComparison.OrdinalIgnoreCase) ? "Search"
                 : string.Equals(requestedSection, "Series", StringComparison.OrdinalIgnoreCase) ? "Series" : "Library";
             ConfigureSection();
         }
@@ -43,16 +44,19 @@ namespace WatchStream.Xbox
         {
             if (PageTitle == null) return;
             bool discover = _section == "Discover";
-            PageTitle.Text = discover ? "Discover" : _section == "Series" ? "Series" : "My Library";
-            PageSubtitle.Text = discover ? "Explore popular movies and series" : _section == "Series" ? "Your saved TV series" : "Your saved movies and series";
-            EmptyIcon.Text = discover ? "✦" : "▤";
-            EmptyTitle.Text = discover ? "No titles found" : "Your library is empty";
-            EmptyDescription.Text = discover
-                ? "No catalog items were returned. Try again when you're connected to the internet."
+            bool search = _section == "Search";
+            bool publicCatalog = discover || search;
+            PageTitle.Text = discover ? "Discover" : search ? "Search" : _section == "Series" ? "Series" : "My Library";
+            PageSubtitle.Text = discover ? "Explore popular movies and series" : search ? "Search movies and series by title" : _section == "Series" ? "Your saved TV series" : "Your saved movies and series";
+            EmptyIcon.Text = publicCatalog ? "✦" : "▤";
+            EmptyTitle.Text = publicCatalog ? "No titles found" : "Your library is empty";
+            EmptyDescription.Text = publicCatalog
+                ? "No catalog items were returned. Check your connection and try again."
                 : "Your Stremio account has no saved titles yet. Discover movies and series to find something to watch.";
-            LoadingText.Text = discover ? "Loading discover catalogs…" : "Loading your library…";
+            LoadingText.Text = publicCatalog ? "Loading public catalogs…" : "Loading your library…";
+            SetNavState(SearchNavButton, search);
             SetNavState(LibraryNavButton, _section == "Library");
-            SetNavState(DiscoverNavButton, _section == "Discover");
+            SetNavState(DiscoverNavButton, discover);
             SetNavState(SeriesNavButton, _section == "Series");
             AllFilterButton.Content = discover ? "Movies" : "All";
             MoviesFilterButton.Content = discover ? "Series" : "Movies";
@@ -80,7 +84,7 @@ namespace WatchStream.Xbox
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             _catalogService = new StremioCatalogService(new SecureSessionStore());
-            Button initial = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
+            Button initial = _section == "Discover" ? DiscoverNavButton : _section == "Search" ? SearchNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
             initial.Focus(FocusState.Programmatic);
             _ = LoadSectionAsync();
         }
@@ -97,7 +101,7 @@ namespace WatchStream.Xbox
             try
             {
                 IReadOnlyList<MediaItem> result;
-                if (_section == "Discover")
+                if (_section == "Discover" || _section == "Search")
                 {
                     var movies = await _catalogService.GetDiscoverAsync("movie", token);
                     var series = await _catalogService.GetDiscoverAsync("series", token);
@@ -114,14 +118,15 @@ namespace WatchStream.Xbox
                 if (_allItems.Count == 0)
                 {
                     ShowState(EmptyPanel);
-                    StatusText.Text = _section == "Discover" ? "The catalog returned no titles." : "No saved titles in this section.";
+                    StatusText.Text = (_section == "Discover" || _section == "Search") ? "The catalog returned no titles." : "No saved titles in this section.";
                     initialFocus();
                 }
                 else
                 {
                     ShowState(ResultsPanel);
                     StatusText.Text = _allItems.Count + " titles loaded.";
-                    if (MediaGrid.Focus(FocusState.Programmatic)) { }
+                    if (_section == "Search") SearchBox.Focus(FocusState.Programmatic);
+                    else if (MediaGrid.Focus(FocusState.Programmatic)) { }
                     else initialFocus();
                 }
             }
@@ -137,8 +142,8 @@ namespace WatchStream.Xbox
             }
             catch (Exception)
             {
-                ErrorDescription.Text = _section == "Discover"
-                    ? "Discover couldn't reach the catalog provider. Check your connection and retry."
+                ErrorDescription.Text = (_section == "Discover" || _section == "Search")
+                    ? "The public catalog couldn't be reached. Check your connection and retry."
                     : "Couldn't read your Stremio library. Reconnect your account if the problem continues.";
                 RetryButton.Content = "Retry";
                 ShowState(ErrorPanel); StatusText.Text = "Unable to load " + _section.ToLowerInvariant() + ".";
@@ -149,7 +154,7 @@ namespace WatchStream.Xbox
 
         private void initialFocus()
         {
-            Button nav = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
+            Button nav = _section == "Discover" ? DiscoverNavButton : _section == "Search" ? SearchNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
             nav.Focus(FocusState.Programmatic);
         }
 
@@ -227,9 +232,9 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button)
             {
-                if (button == LibraryNavButton || button == DiscoverNavButton || button == SeriesNavButton)
+                if (button == SearchNavButton || button == LibraryNavButton || button == DiscoverNavButton || button == SeriesNavButton)
                 {
-                    bool selected = (button == LibraryNavButton && _section == "Library") || (button == DiscoverNavButton && _section == "Discover") || (button == SeriesNavButton && _section == "Series");
+                    bool selected = (button == SearchNavButton && _section == "Search") || (button == LibraryNavButton && _section == "Library") || (button == DiscoverNavButton && _section == "Discover") || (button == SeriesNavButton && _section == "Series");
                     SetNavState(button, selected);
                 }
                 else
@@ -263,6 +268,8 @@ namespace WatchStream.Xbox
         }
 
         private void HomeButton_Click(object sender, RoutedEventArgs e) { if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage)); }
+        private void SearchTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Search") Frame?.Navigate(typeof(CatalogPage), "Search"); else SearchBox.Focus(FocusState.Programmatic); }
+        private void AddonsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AddonsPage));
         private void LibraryTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Library") Frame?.Navigate(typeof(CatalogPage), "Library"); }
         private void DiscoverTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Discover") Frame?.Navigate(typeof(CatalogPage), "Discover"); }
         private void SeriesButton_Click(object sender, RoutedEventArgs e) { if (_section != "Series") Frame?.Navigate(typeof(CatalogPage), "Series"); }
