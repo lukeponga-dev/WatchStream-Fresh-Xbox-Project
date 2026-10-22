@@ -19,7 +19,7 @@
                     <Button Content="▤   Library" Click="LibraryButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="2"/>
                     <Button Content="▣   Series" Click="SeriesButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="3"/>
                     <Button Content="✦   Discover" Click="DiscoverButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="3"/>
-                    <Button Content="▦   Add-ons" Click="AddonsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="4"/>
+                    <Button x:Name="AddonsNavButton" Content="▦   Add-ons" Click="AddonsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="4"/>
                     <Button Content="↔   Connect Stremio" Click="ConnectButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="5"/>
                     <Button Content="⚙   Settings" Click="SettingsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="6"/>
                 </StackPanel>
