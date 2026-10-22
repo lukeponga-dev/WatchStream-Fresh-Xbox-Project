@@ -13,6 +13,7 @@ namespace WatchStream.Xbox
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             StatusText.Text = "Settings page ready. Use the sidebar to move between sections.";
+            SettingsNavButton.Focus(FocusState.Programmatic);
         }
 
         private void HomeButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(MainPage));
