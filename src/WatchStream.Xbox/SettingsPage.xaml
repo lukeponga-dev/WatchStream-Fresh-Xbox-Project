@@ -18,7 +18,7 @@
                 <Button Content="▦   Add-ons" Click="AddonsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="4"/>
                 <Button Content="⌕   Search" Click="SearchButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="5"/>
                 <Button Content="↔   Connect Stremio" Click="ConnectButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="6"/>
-                <Button Content="⚙   Settings" Click="SettingsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="7"/>
+                <Button x:Name="SettingsNavButton" Content="⚙   Settings" Click="SettingsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="7"/>
             </StackPanel>
         </Border>
         <Grid Grid.Column="1" Margin="28,24,28,24" RowSpacing="18">
