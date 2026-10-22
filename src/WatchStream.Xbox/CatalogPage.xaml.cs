@@ -25,6 +25,7 @@ namespace WatchStream.Xbox
         private StremioCatalogService? _catalogService;
         private CancellationTokenSource? _loadCancellation;
         private MediaItem? _selectedItem;
+        private MediaItem? _pendingDetails;
 
         public CatalogPage()
         {
@@ -35,7 +36,9 @@ namespace WatchStream.Xbox
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            _pendingDetails = e.Parameter as MediaItem;
             var requestedSection = e.Parameter as string;
+            if (_pendingDetails != null) requestedSection = "Discover";
             _section = string.Equals(requestedSection, "Discover", StringComparison.OrdinalIgnoreCase) ? "Discover"
                 : string.Equals(requestedSection, "Search", StringComparison.OrdinalIgnoreCase) ? "Search"
                 : string.Equals(requestedSection, "Series", StringComparison.OrdinalIgnoreCase) ? "Series" : "Library";
@@ -117,6 +120,12 @@ namespace WatchStream.Xbox
 
                 _allItems = result.ToList();
                 ApplyFilters();
+                if (_pendingDetails != null)
+                {
+                    var requestedItem = _pendingDetails;
+                    _pendingDetails = null;
+                    ShowDetails(requestedItem);
+                }
                 if (_allItems.Count == 0)
                 {
                     ShowState(EmptyPanel);
