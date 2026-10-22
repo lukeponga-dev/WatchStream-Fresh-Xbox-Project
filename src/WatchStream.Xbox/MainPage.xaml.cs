@@ -10,7 +10,7 @@ namespace WatchStream.Xbox
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            BrowseButton.Focus(FocusState.Programmatic);
+            HomeNavButton.Focus(FocusState.Programmatic);
             StatusText.Text = "Ready. Use the D-pad or left stick to move, then press A to select.";
         }
 
