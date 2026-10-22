@@ -37,22 +37,23 @@ namespace WatchStream.Xbox
                     PageTitle.Text = "My Library"; PageSubtitle.Text = "Your saved movies and series"; EmptyIcon.Text = "▤";
                     EmptyTitle.Text = "Your library is waiting"; EmptyDescription.Text = "Connect a supported account or catalog source to see your saved titles here."; LoadingText.Text = "Loading your library…"; break;
             }
-            SetTabState(LibraryTabButton, _section == "Library");
-            SetTabState(DiscoverTabButton, _section == "Discover");
+            SetNavState(LibraryNavButton, _section == "Library");
+            SetNavState(DiscoverNavButton, _section == "Discover");
+            SetNavState(SeriesNavButton, _section == "Series");
         }
 
-        private void SetTabState(Button button, bool selected)
+        private void SetNavState(Button button, bool selected)
         {
             button.Background = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 38, 52, 82));
             button.Foreground = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 7, 17, 29) : Windows.UI.Color.FromArgb(255, 245, 247, 255));
             button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
-            button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197));
-            button.IsEnabled = !selected;
+            button.BorderBrush = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 42, 56, 88));
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            if (HomeButton != null) HomeButton.Focus(FocusState.Programmatic);
+            Button initial = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
+            initial.Focus(FocusState.Programmatic);
             _ = LoadSectionAsync();
         }
 
@@ -65,7 +66,9 @@ namespace WatchStream.Xbox
                 await Task.Delay(350);
                 ShowState(EmptyPanel);
                 StatusText.Text = "No catalog source connected. Your data has not been changed.";
-                RefreshButton.Focus(FocusState.Programmatic);
+                // Keep focus in the left navigation rather than on a button that appears after loading.
+                Button nav = _section == "Discover" ? DiscoverNavButton : _section == "Series" ? SeriesNavButton : LibraryNavButton;
+                nav.Focus(FocusState.Programmatic);
             }
             catch (Exception)
             {
@@ -88,7 +91,7 @@ namespace WatchStream.Xbox
             {
                 button.BorderThickness = new Thickness(3);
                 button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197));
-                if (button != LibraryTabButton && button != DiscoverTabButton)
+                if (button != LibraryNavButton && button != DiscoverNavButton && button != SeriesNavButton && button != ConnectAccountButton)
                     button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 45, 65, 98));
             }
         }
@@ -97,24 +100,29 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button)
             {
-                button.BorderThickness = button == LibraryTabButton || button == DiscoverTabButton
-                    ? new Thickness(button.IsEnabled ? 1 : 2) : new Thickness(1);
-                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 42, 56, 88));
-                if (button == HomeButton)
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 38, 52, 82));
-                else if (button == RefreshButton || button == RetryButton)
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197));
-                else if (button == LibraryTabButton || button == DiscoverTabButton)
-                    button.Background = new SolidColorBrush(button.IsEnabled ? Windows.UI.Color.FromArgb(255, 38, 52, 82) : Windows.UI.Color.FromArgb(255, 57, 214, 197));
+                if (button == LibraryNavButton || button == DiscoverNavButton || button == SeriesNavButton)
+                {
+                    bool selected = (button == LibraryNavButton && _section == "Library") || (button == DiscoverNavButton && _section == "Discover") || (button == SeriesNavButton && _section == "Series");
+                    button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
+                    button.BorderBrush = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 42, 56, 88));
+                    button.Background = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 57, 214, 197) : Windows.UI.Color.FromArgb(255, 38, 52, 82));
+                    button.Foreground = new SolidColorBrush(selected ? Windows.UI.Color.FromArgb(255, 7, 17, 29) : Windows.UI.Color.FromArgb(255, 245, 247, 255));
+                }
+                else
+                {
+                    button.BorderThickness = new Thickness(1);
+                    button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 42, 56, 88));
+                    button.Background = button == ConnectAccountButton || button == RetryButton ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 197)) : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 38, 52, 82));
+                }
             }
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadSectionAsync();
-        private void HomeButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage));
-        }
+        private void HomeButton_Click(object sender, RoutedEventArgs e) { if (Frame != null && Frame.CanGoBack) Frame.GoBack(); else Frame?.Navigate(typeof(MainPage)); }
         private void LibraryTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Library") Frame?.Navigate(typeof(CatalogPage), "Library"); }
         private void DiscoverTabButton_Click(object sender, RoutedEventArgs e) { if (_section != "Discover") Frame?.Navigate(typeof(CatalogPage), "Discover"); }
+        private void SeriesButton_Click(object sender, RoutedEventArgs e) { if (_section != "Series") Frame?.Navigate(typeof(CatalogPage), "Series"); }
+        private void ConnectButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AccountPage));
+        private void SettingsButton_Click(object sender, RoutedEventArgs e) { StatusText.Text = "Settings is planned for a later milestone."; }
     }
 }
