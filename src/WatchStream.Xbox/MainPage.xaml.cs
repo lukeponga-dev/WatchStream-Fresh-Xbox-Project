@@ -52,8 +52,8 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button && button.DataContext is MediaItem item)
             {
-                StatusText.Text = item.Name + " selected. Opening Discover for more details.";
-                NavigateToCatalog("Discover");
+                StatusText.Text = "Opening " + item.Name + "...";
+                Frame?.Navigate(typeof(CatalogPage), item);
             }
         }
         private void Control_GotFocus(object sender, RoutedEventArgs e)
