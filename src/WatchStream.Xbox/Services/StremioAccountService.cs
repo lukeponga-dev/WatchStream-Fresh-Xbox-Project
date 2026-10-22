@@ -51,8 +51,33 @@ namespace WatchStream.Xbox.Services
 
         public async Task<AccountSessionState> GetSessionStateAsync(CancellationToken cancellationToken)
         {
-            var session = await _sessionStore.ReadSessionAsync(cancellationToken);
-            return string.IsNullOrWhiteSpace(session) ? AccountSessionState.SignedOut : AccountSessionState.SignedIn;
+            var authKey = await _sessionStore.ReadSessionAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(authKey)) return AccountSessionState.SignedOut;
+
+            // A stored token is not proof that the remote session is still valid.
+            using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "getUser"))
+            {
+                request.Content = new StringContent(JsonSerializer.Serialize(new { authKey }), Encoding.UTF8, "application/json");
+                using (var response = await _httpClient.SendAsync(request, cancellationToken))
+                {
+                    var responseText = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException("Couldn't validate the saved Stremio session. Check your connection and retry.");
+
+                    using (var document = JsonDocument.Parse(responseText))
+                    {
+                        var root = document.RootElement;
+                        if (root.TryGetProperty("error", out _) ||
+                            !root.TryGetProperty("result", out var result) ||
+                            result.ValueKind == JsonValueKind.Null)
+                        {
+                            await _sessionStore.ClearAsync(cancellationToken);
+                            return AccountSessionState.ReauthenticationRequired;
+                        }
+                        return AccountSessionState.SignedIn;
+                    }
+                }
+            }
         }
 
         public async Task SignOutAsync(CancellationToken cancellationToken)
