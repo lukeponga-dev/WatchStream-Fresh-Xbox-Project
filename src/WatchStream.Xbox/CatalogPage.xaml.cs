@@ -8,6 +8,7 @@ using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using WatchStream.Core.Models;
 using WatchStream.Xbox.Services;
@@ -23,6 +24,7 @@ namespace WatchStream.Xbox
         private List<MediaItem> _allItems = new List<MediaItem>();
         private StremioCatalogService? _catalogService;
         private CancellationTokenSource? _loadCancellation;
+        private MediaItem? _selectedItem;
 
         public CatalogPage()
         {
@@ -208,15 +210,41 @@ namespace WatchStream.Xbox
 
         private void MediaCard_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.DataContext is MediaItem item)
-                StatusText.Text = item.Name + " selected. Playback and details are the next integration step.";
+            if (sender is Button button && button.DataContext is MediaItem item) ShowDetails(item);
         }
         private void MediaGrid_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (e.ClickedItem is MediaItem item)
-                StatusText.Text = item.Name + " selected. Playback and details are the next integration step.";
+            if (e.ClickedItem is MediaItem item) ShowDetails(item);
         }
-
+        private void ShowDetails(MediaItem item)
+        {
+            _selectedItem = item;
+            DetailsTitle.Text = item.Name;
+            DetailsYear.Text = item.Year;
+            DetailsType.Text = string.Equals(item.Type, "series", StringComparison.OrdinalIgnoreCase) ? "Series" : "Movie";
+            DetailsDescription.Text = string.IsNullOrWhiteSpace(item.Description) ? "No description was supplied by this catalog." : item.Description;
+            DetailsActionStatus.Text = string.Empty;
+            DetailsSourceStatus.Text = "Stream links require a compatible installed add-on.";
+            DetailsPoster.Source = null;
+            Uri posterUri;
+            if (!string.IsNullOrWhiteSpace(item.Poster) && Uri.TryCreate(item.Poster, UriKind.Absolute, out posterUri)) DetailsPoster.Source = new BitmapImage(posterUri);
+            DetailsOverlay.Visibility = Visibility.Visible;
+            DetailsBackButton.Focus(FocusState.Programmatic);
+            StatusText.Text = "Viewing " + item.Name + ".";
+        }
+        private void DetailsBackButton_Click(object sender, RoutedEventArgs e)
+        {
+            DetailsOverlay.Visibility = Visibility.Collapsed;
+            if (!MediaGrid.Focus(FocusState.Programmatic)) initialFocus();
+        }
+        private void DetailsPlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            DetailsActionStatus.Text = "Stream selection is not implemented yet; add-on stream support is required before playback can start.";
+        }
+        private void DetailsLibraryButton_Click(object sender, RoutedEventArgs e)
+        {
+            DetailsActionStatus.Text = "Saving to your Stremio library requires the account library-write integration.";
+        }
         private void Control_GotFocus(object sender, RoutedEventArgs e)
         {
             if (sender is Button button)
