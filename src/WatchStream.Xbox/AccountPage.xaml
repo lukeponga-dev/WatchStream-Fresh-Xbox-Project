@@ -26,10 +26,13 @@
                         <TextBlock x:Name="LinkUrlText" Text="https://link.stremio.com/" FontSize="14" TextWrapping="Wrap" HorizontalAlignment="Center" Foreground="#B7C2DC"/>
                         <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,2,0,0">
                             <Button x:Name="RefreshLinkButton" Content="New code" Click="RefreshLinkButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
-                                    MinHeight="48" MinWidth="150" FontSize="16" Background="#39D6C5" Foreground="#07111D" TabIndex="1" UseSystemFocusVisuals="True" XYFocusRight="{x:Bind EmailOptionButton}"/>
+                                    MinHeight="48" MinWidth="140" FontSize="16" Background="#39D6C5" Foreground="#07111D" TabIndex="1" UseSystemFocusVisuals="True" XYFocusRight="{x:Bind FacebookLoginButton}"/>
+                            <Button x:Name="FacebookLoginButton" Content="Continue with Facebook" Click="FacebookLoginButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+                                    MinHeight="48" MinWidth="220" FontSize="16" Background="#1877F2" Foreground="#FFFFFF" TabIndex="2" UseSystemFocusVisuals="True" XYFocusLeft="{x:Bind RefreshLinkButton}" XYFocusRight="{x:Bind EmailOptionButton}"/>
                             <Button x:Name="EmailOptionButton" Content="Use email instead" Click="UseEmailButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
-                                    MinHeight="48" MinWidth="180" FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True" XYFocusLeft="{x:Bind RefreshLinkButton}"/>
+                                    MinHeight="48" MinWidth="180" FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="3" UseSystemFocusVisuals="True" XYFocusLeft="{x:Bind FacebookLoginButton}"/>
                         </StackPanel>
+                        <TextBlock Text="Facebook sign-in opens Stremio's official account-link page in your browser. Finish sign-in there to connect this Xbox." FontSize="13" Foreground="#9BA8C7" TextWrapping="Wrap" HorizontalAlignment="Center" MaxWidth="600"/>
                     </StackPanel>
                     <StackPanel x:Name="SignedOutPanel" Visibility="Collapsed" Spacing="8">
                         <TextBlock Text="Email address" FontSize="16" FontWeight="SemiBold"/>
