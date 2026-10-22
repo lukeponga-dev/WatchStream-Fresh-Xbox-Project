@@ -246,9 +246,49 @@ namespace WatchStream.Xbox
             DetailsOverlay.Visibility = Visibility.Collapsed;
             if (!MediaGrid.Focus(FocusState.Programmatic)) initialFocus();
         }
-        private void DetailsPlayButton_Click(object sender, RoutedEventArgs e)
+        private async void DetailsPlayButton_Click(object sender, RoutedEventArgs e)
         {
-            DetailsActionStatus.Text = "Stream selection is not implemented yet; add-on stream support is required before playback can start.";
+            if (_selectedItem == null) return;
+            if (string.Equals(_selectedItem.Type, "series", StringComparison.OrdinalIgnoreCase))
+            {
+                DetailsSourceStatus.Text = "For series, select an episode first. Episode selection is the next playback feature.";
+                DetailsActionStatus.Text = "Movie stream lookup is supported first; series playback needs an episode ID.";
+                return;
+            }
+
+            DetailsPlayButton.IsEnabled = false;
+            DetailsPlayButton.Content = "Searching add-ons…";
+            DetailsStreamsList.Visibility = Visibility.Collapsed;
+            DetailsStreamsList.ItemsSource = null;
+            DetailsSourceStatus.Text = "Checking installed add-ons for streams…";
+            DetailsActionStatus.Text = string.Empty;
+            try
+            {
+                var addonService = new StremioAddonService();
+                var sources = await addonService.ResolveStreamsAsync(_selectedItem.Type, _selectedItem.Id, CancellationToken.None);
+                DetailsStreamsList.ItemsSource = sources;
+                DetailsStreamsList.Visibility = sources.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                DetailsSourceStatus.Text = sources.Count > 0
+                    ? "Choose a source to start playback."
+                    : "No direct HTTP(S) streams were returned. Install an add-on that supports this title and try again.";
+                DetailsActionStatus.Text = sources.Count + " playable source(s) found.";
+            }
+            catch (Exception ex)
+            {
+                DetailsSourceStatus.Text = "Stream lookup failed.";
+                DetailsActionStatus.Text = ex.Message;
+            }
+            finally
+            {
+                DetailsPlayButton.IsEnabled = true;
+                DetailsPlayButton.Content = "▶   Find streams";
+            }
+        }
+
+        private void DetailsStreamsList_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is StreamSource source && Frame != null)
+                Frame.Navigate(typeof(PlayerPage), source);
         }
         private void DetailsLibraryButton_Click(object sender, RoutedEventArgs e)
         {
