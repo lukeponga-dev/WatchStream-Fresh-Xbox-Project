@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  IgnorableNamespaces="uap uap3">
+  <Identity Name="LukePonga.WatchStreamXbox" Publisher="CN=WatchStreamDevelopment" Version="0.1.0.0" />
+  <Properties>
+    <DisplayName>WatchStream</DisplayName>
+    <PublisherDisplayName>WatchStream</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="WatchStream.Xbox.App">
+      <uap:VisualElements DisplayName="WatchStream" Description="Controller-first media app foundation"
+        BackgroundColor="#101218" Square150x150Logo="Assets\StoreLogo.png"
+        Square44x44Logo="Assets\StoreLogo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\StoreLogo.png" />
+        <uap:SplashScreen Image="Assets\StoreLogo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>
