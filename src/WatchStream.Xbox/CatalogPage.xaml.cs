@@ -61,6 +61,14 @@ namespace WatchStream.Xbox
             UpdateFilterButtons();
         }
 
+        private void ShowState(FrameworkElement activePanel)
+        {
+            LoadingPanel.Visibility = activePanel == LoadingPanel ? Visibility.Visible : Visibility.Collapsed;
+            EmptyPanel.Visibility = activePanel == EmptyPanel ? Visibility.Visible : Visibility.Collapsed;
+            ErrorPanel.Visibility = activePanel == ErrorPanel ? Visibility.Visible : Visibility.Collapsed;
+            ResultsPanel.Visibility = activePanel == ResultsPanel ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         private void SetNavState(Button button, bool selected)
         {
             button.Background = new SolidColorBrush(Color.FromArgb(255, selected ? (byte)57 : (byte)38, selected ? (byte)214 : (byte)52, selected ? (byte)197 : (byte)82));
