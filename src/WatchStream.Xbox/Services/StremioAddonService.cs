@@ -1,0 +1,157 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Storage;
+
+namespace WatchStream.Xbox.Services
+{
+    public sealed class InstalledAddon
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ManifestUrl { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public bool SupportsStreams { get; set; }
+        public bool SupportsCatalogs { get; set; }
+    }
+
+    public sealed class StreamSource
+    {
+        public string Name { get; set; } = "Stream";
+        public string Url { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string AddonName { get; set; } = string.Empty;
+        public string Quality { get; set; } = string.Empty;
+        public string DisplayName => string.IsNullOrWhiteSpace(Quality) ? Name : Name + "  •  " + Quality;
+    }
+
+    /// <summary>Installs public HTTPS Stremio add-ons from their manifest and resolves documented stream resources.</summary>
+    public sealed class StremioAddonService
+    {
+        private const string SettingsKey = "WatchStream.InstalledAddons.v1";
+        private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+
+        public IReadOnlyList<InstalledAddon> GetInstalled()
+        {
+            var raw = ApplicationData.Current.LocalSettings.Values[SettingsKey] as string;
+            if (string.IsNullOrWhiteSpace(raw)) return Array.Empty<InstalledAddon>();
+            try
+            {
+                return JsonSerializer.Deserialize<List<InstalledAddon>>(raw) ?? new List<InstalledAddon>();
+            }
+            catch { return Array.Empty<InstalledAddon>(); }
+        }
+
+        public async Task<InstalledAddon> InstallAsync(string manifestUrl, CancellationToken cancellationToken)
+        {
+            if (!Uri.TryCreate(manifestUrl?.Trim(), UriKind.Absolute, out var uri))
+                throw new InvalidOperationException("Enter a valid add-on manifest URL ending in /manifest.json.");
+            if (uri.Scheme != Uri.UriSchemeHttps &&
+                !(uri.Scheme == Uri.UriSchemeHttp && (uri.IsLoopback || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))))
+                throw new InvalidOperationException("Add-ons must use HTTPS. HTTP is allowed only for localhost development.");
+            if (!uri.AbsolutePath.EndsWith("/manifest.json", StringComparison.OrdinalIgnoreCase) &&
+                !uri.AbsolutePath.Equals("/manifest.json", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The URL must point to the add-on's /manifest.json endpoint.");
+
+            using (var response = await Http.GetAsync(uri, cancellationToken))
+            {
+                if (!response.IsSuccessStatusCode) throw new InvalidOperationException("The add-on manifest could not be downloaded.");
+                using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                {
+                    var root = doc.RootElement;
+                    var id = GetString(root, "id");
+                    var name = GetString(root, "name");
+                    if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
+                        throw new InvalidOperationException("This manifest is missing the required id or name fields.");
+                    var resources = new List<string>();
+                    if (root.TryGetProperty("resources", out var resourceArray) && resourceArray.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var resource in resourceArray.EnumerateArray())
+                        {
+                            if (resource.ValueKind == JsonValueKind.String) resources.Add(resource.GetString() ?? string.Empty);
+                            else if (resource.ValueKind == JsonValueKind.Object && resource.TryGetProperty("name", out var resourceName))
+                                resources.Add(resourceName.GetString() ?? string.Empty);
+                        }
+                    }
+                    var addon = new InstalledAddon
+                    {
+                        Id = id,
+                        Name = name,
+                        Description = GetString(root, "description") ?? string.Empty,
+                        ManifestUrl = uri.AbsoluteUri,
+                        Version = GetString(root, "version") ?? string.Empty,
+                        SupportsStreams = resources.Contains("stream", StringComparer.OrdinalIgnoreCase),
+                        SupportsCatalogs = resources.Contains("catalog", StringComparer.OrdinalIgnoreCase)
+                    };
+                    var installed = GetInstalled().Where(x => !string.Equals(x.ManifestUrl, addon.ManifestUrl, StringComparison.OrdinalIgnoreCase)).ToList();
+                    installed.Add(addon);
+                    ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed);
+                    return addon;
+                }
+            }
+        }
+
+        public void Remove(string manifestUrl)
+        {
+            var installed = GetInstalled().Where(x => !string.Equals(x.ManifestUrl, manifestUrl, StringComparison.OrdinalIgnoreCase)).ToList();
+            ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed);
+        }
+
+        public async Task<IReadOnlyList<StreamSource>> ResolveStreamsAsync(string type, string itemId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(itemId))
+                throw new ArgumentException("A content type and item ID are required.");
+            var sources = new List<StreamSource>();
+            foreach (var addon in GetInstalled().Where(x => x.SupportsStreams))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    var manifest = new Uri(addon.ManifestUrl);
+                    var basePath = manifest.AbsoluteUri.Substring(0, manifest.AbsoluteUri.Length - "manifest.json".Length);
+                    var streamUrl = basePath + "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json";
+                    using (var response = await Http.GetAsync(streamUrl, cancellationToken))
+                    {
+                        if (!response.IsSuccessStatusCode) continue;
+                        using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                        {
+                            if (!doc.RootElement.TryGetProperty("streams", out var streams) || streams.ValueKind != JsonValueKind.Array) continue;
+                            foreach (var stream in streams.EnumerateArray())
+                            {
+                                var url = GetString(stream, "url");
+                                if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var parsed) ||
+                                    (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)) continue;
+                                var title = GetString(stream, "name") ?? GetString(stream, "title") ?? "Stream";
+                                var description = GetString(stream, "description") ?? string.Empty;
+                                var behavior = stream.TryGetProperty("behaviorHints", out var hints) ? GetString(hints, "videoHash") : null;
+                                sources.Add(new StreamSource
+                                {
+                                    Name = title,
+                                    Url = parsed.AbsoluteUri,
+                                    Description = description,
+                                    AddonName = addon.Name,
+                                    Quality = behavior ?? string.Empty
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { /* One unavailable add-on must not block results from others. */ }
+            }
+            return sources;
+        }
+
+        private static string? GetString(JsonElement element, string property)
+        {
+            return element.ValueKind == JsonValueKind.Object &&
+                   element.TryGetProperty(property, out var value) &&
+                   value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+        }
+    }
+}
