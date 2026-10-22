@@ -51,24 +51,35 @@
             <StackPanel Spacing="4"><TextBlock Text="Explore WatchStream" FontSize="25" FontWeight="Bold"/><TextBlock Text="Choose a section using your controller" FontSize="14" Foreground="#9BA8C7"/></StackPanel>
             <TextBlock Grid.Column="1" Text="D-PAD / LEFT STICK  •  A SELECT  •  B BACK" FontSize="12" Foreground="#9BA8C7" VerticalAlignment="Center"/>
         </Grid>
-        <Grid Grid.Row="6" ColumnSpacing="18">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-            <Button x:Name="LibraryButton" Grid.Column="0" Click="LibraryButton_Click" TabIndex="2" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+        <Grid Grid.Row="6" ColumnSpacing="18" RowSpacing="14">
+            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Button x:Name="LibraryButton" Grid.Column="0" Grid.Row="0" Click="LibraryButton_Click" TabIndex="2" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="190"
                     XYFocusUp="{x:Bind BrowseButton}" XYFocusRight="{x:Bind DiscoverButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="▤" FontSize="38" Foreground="#39D6C5"/><TextBlock Text="My Library" FontSize="21" FontWeight="Bold"/><TextBlock Text="Continue with your saved titles." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
             </Button>
-            <Button x:Name="DiscoverButton" Grid.Column="1" Click="DiscoverButton_Click" TabIndex="3" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+            <Button x:Name="DiscoverButton" Grid.Column="1" Grid.Row="0" Click="DiscoverButton_Click" TabIndex="3" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="190"
                     XYFocusUp="{x:Bind ConnectButton}" XYFocusLeft="{x:Bind LibraryButton}" XYFocusRight="{x:Bind SeriesButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="✦" FontSize="38" Foreground="#F6B94A"/><TextBlock Text="Discover" FontSize="21" FontWeight="Bold"/><TextBlock Text="Find something new to watch." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
             </Button>
-            <Button x:Name="SeriesButton" Grid.Column="2" Click="SeriesButton_Click" TabIndex="4" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+            <Button x:Name="SeriesButton" Grid.Column="2" Grid.Row="0" Click="SeriesButton_Click" TabIndex="4" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="190"
                     XYFocusUp="{x:Bind ConnectButton}" XYFocusLeft="{x:Bind DiscoverButton}" XYFocusRight="{x:Bind SettingsButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="▣" FontSize="38" Foreground="#A995FF"/><TextBlock Text="Series" FontSize="21" FontWeight="Bold"/><TextBlock Text="Browse TV and episodic content." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
             </Button>
-            <Button x:Name="SettingsButton" Grid.Column="3" Click="SettingsButton_Click" TabIndex="5" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+            <Button x:Name="SearchButton" Grid.Column="0" Grid.Row="1" Click="SearchButton_Click" TabIndex="7" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+                    UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="140"
+                    XYFocusUp="{x:Bind LibraryButton}" XYFocusRight="{x:Bind AddonsButton}">
+                <StackPanel Margin="22" Spacing="10" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="⌕" FontSize="34" Foreground="#39D6C5"/><TextBlock Text="Search" FontSize="21" FontWeight="Bold"/><TextBlock Text="Find titles by name." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
+            </Button>
+            <Button x:Name="AddonsButton" Grid.Column="1" Grid.Row="1" Click="AddonsButton_Click" TabIndex="6" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
+                    UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="140"
+                    XYFocusUp="{x:Bind DiscoverButton}" XYFocusLeft="{x:Bind SearchButton}" XYFocusRight="{x:Bind SettingsButton}">
+                <StackPanel Margin="22" Spacing="10" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="▦" FontSize="34" Foreground="#A995FF"/><TextBlock Text="Add-ons" FontSize="21" FontWeight="Bold"/><TextBlock Text="Manage catalog sources." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
+            </Button>
+            <Button x:Name="SettingsButton" Grid.Column="2" Grid.Row="1" Click="SettingsButton_Click" TabIndex="5" IsTabStop="True" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus"
                     UseSystemFocusVisuals="True" Background="#17213A" Foreground="#F5F7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Padding="0" MinHeight="190"
                     XYFocusUp="{x:Bind ConnectButton}" XYFocusLeft="{x:Bind SeriesButton}">
                 <StackPanel Margin="22" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="⚙" FontSize="38" Foreground="#FF8FA3"/><TextBlock Text="Settings" FontSize="21" FontWeight="Bold"/><TextBlock Text="Account, playback and app options." FontSize="14" Foreground="#B7C2DC" TextWrapping="Wrap"/></StackPanel>
