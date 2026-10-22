@@ -123,15 +123,16 @@ namespace WatchStream.Xbox
                 ErrorDescription.Text = ex.Message;
                 ShowState(ErrorPanel);
                 StatusText.Text = "Unable to load " + _section.ToLowerInvariant() + ".";
-                if (ex.Message.IndexOf("Connect your Stremio", StringComparison.OrdinalIgnoreCase) >= 0)
-                    ConnectAccountButton.Focus(FocusState.Programmatic);
-                else RetryButton.Focus(FocusState.Programmatic);
+                bool needsAccount = ex.Message.IndexOf("Connect your Stremio", StringComparison.OrdinalIgnoreCase) >= 0;
+                RetryButton.Content = needsAccount ? "Connect Stremio" : "Retry";
+                RetryButton.Focus(FocusState.Programmatic);
             }
             catch (Exception)
             {
                 ErrorDescription.Text = _section == "Discover"
                     ? "Discover couldn't reach the catalog provider. Check your connection and retry."
                     : "Couldn't read your Stremio library. Reconnect your account if the problem continues.";
+                RetryButton.Content = "Retry";
                 ShowState(ErrorPanel); StatusText.Text = "Unable to load " + _section.ToLowerInvariant() + ".";
                 RetryButton.Focus(FocusState.Programmatic);
             }
@@ -233,6 +234,17 @@ namespace WatchStream.Xbox
                         UpdateFilterButtons();
                     else button.Background = new SolidColorBrush(Color.FromArgb(255, 38, 52, 82));
                 }
+            }
+        }
+
+        private void ErrorActionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.Equals(RetryButton.Content?.ToString(), "Connect Stremio", StringComparison.OrdinalIgnoreCase))
+                Frame?.Navigate(typeof(AccountPage));
+            else
+            {
+                _isLoading = false;
+                _ = LoadSectionAsync();
             }
         }
 
