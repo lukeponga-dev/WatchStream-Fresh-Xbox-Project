@@ -24,7 +24,7 @@
                 <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#183B70" Margin="0,0,0,7"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/><TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/></StackPanel>
             </Grid>
         </Border>
-        <Grid Grid.Column="1" Padding="24,20,24,18" RowSpacing="14">
+        <Grid Grid.Column="1" Margin="24,20,24,18" RowSpacing="14">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="2.2*"/><RowDefinition Height="Auto"/><RowDefinition Height="1.15*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -57,21 +57,31 @@
                 <TextBlock Text="Continue Watching" FontSize="22" FontWeight="Bold"/>
                 <TextBlock Grid.Column="1" Text="Browse all  ›" FontSize="13" Foreground="#39D6C5" VerticalAlignment="Center"/>
             </Grid>
-            <Grid Grid.Row="3" ColumnSpacing="12">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" TabIndex="9" UseSystemFocusVisuals="True">
-                    <StackPanel Spacing="0"><Border Height="92" Background="#163D76"><TextBlock Text="◈" FontSize="48" Foreground="#69D8FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><Border Padding="10"><StackPanel Spacing="4"><TextBlock Text="Discover something" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="Explore movies and series" FontSize="11" Foreground="#9BA8C7"/></StackPanel></Border></StackPanel>
-                </Button>
-                <Button Grid.Column="1" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" TabIndex="10" UseSystemFocusVisuals="True">
-                    <StackPanel Spacing="0"><Border Height="92" Background="#25245C"><TextBlock Text="✦" FontSize="48" Foreground="#B7A1FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><Border Padding="10"><StackPanel Spacing="4"><TextBlock Text="Your library" FontSize="14" FontWeight="SemiBold"/><TextBlock Text="Saved titles and watchlist" FontSize="11" Foreground="#9BA8C7" TextWrapping="Wrap"/></StackPanel></Border></StackPanel>
-                </Button>
-                <Button Grid.Column="2" Click="AddonsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" TabIndex="11" UseSystemFocusVisuals="True">
-                    <StackPanel Spacing="0"><Border Height="92" Background="#153F50"><TextBlock Text="▦" FontSize="48" Foreground="#39D6C5" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><Border Padding="10"><StackPanel Spacing="4"><TextBlock Text="Add-ons" FontSize="14" FontWeight="SemiBold"/><TextBlock Text="Catalog sources" FontSize="11" Foreground="#9BA8C7"/></StackPanel></Border></StackPanel>
-                </Button>
-                <Button Grid.Column="3" Click="SearchButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" TabIndex="12" UseSystemFocusVisuals="True">
-                    <StackPanel Spacing="0"><Border Height="92" Background="#3B1D65"><TextBlock Text="⌕" FontSize="48" Foreground="#D57BFF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><Border Padding="10"><StackPanel Spacing="4"><TextBlock Text="Search titles" FontSize="14" FontWeight="SemiBold"/><TextBlock Text="Find your next favourite" FontSize="11" Foreground="#9BA8C7" TextWrapping="Wrap"/></StackPanel></Border></StackPanel>
-                </Button>
-            </Grid>
+            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ZoomMode="Disabled">
+                <ItemsControl x:Name="HomeMediaItems">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Background="#101F3A" BorderBrush="#2458A7" BorderThickness="1" Padding="0" Margin="0,0,12,0" Width="190" MinHeight="190" UseSystemFocusVisuals="True">
+                                <StackPanel Spacing="0">
+                                    <Grid Height="125" Background="#14285A">
+                                        <Image Source="{Binding Poster}" Stretch="UniformToFill"/>
+                                        <TextBlock Text="▶" FontSize="38" Foreground="#39D6FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Border Padding="10">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"/>
+                                            <TextBlock Text="{Binding Year}" FontSize="11" Foreground="#9BA8C7"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
             <Grid Grid.Row="4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock x:Name="StatusText" Text="Ready. Use your controller to explore." FontSize="12" Foreground="#9BA8C7" VerticalAlignment="Center"/><TextBlock Grid.Column="1" Text="XBOX ONE  •  CONTROLLER READY" FontSize="10" Foreground="#657493" VerticalAlignment="Center"/></Grid>
         </Grid>
     </Grid>
