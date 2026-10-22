@@ -1,52 +1,45 @@
-# Windows PC + Xbox One: concrete first steps
+# Windows PC + Xbox One: manual Visual Studio setup
 
-This guide is for developing on a Windows PC and testing on one Xbox One console.
+This guide is for developing on a Windows PC and testing on one Xbox One console. The generated app shell and solution were intentionally removed so the project can be created by Visual Studio itself.
 
-## 1. Prepare the Windows PC
+## 1. Create the app project in Visual Studio 2026
 
-1. Install a current Visual Studio release from https://visualstudio.microsoft.com/downloads/.
-2. In Visual Studio Installer, check whether **Universal Windows Platform development** and the Windows 10 SDK components needed by the project are available. Install the UWP workload/SDK if offered.
-3. Open `src/WatchStream.Xbox/WatchStream.Xbox.csproj` in Visual Studio.
-4. If Visual Studio reports that the UWP project type or target SDK is unavailable, do not convert it to WinUI 3 automatically. First check the installed UWP tooling and the target SDK listed in the project file.
-5. Select **x64** and **Debug**. Build the project. Resolve build/tooling errors before adding network or media code.
+1. Open the repository folder in File Explorer, then open Visual Studio 2026.
+2. Select **Create a new project**.
+3. Search for **UWP Blank App** and choose the C# XAML template. Do not choose a WinUI 3 desktop app.
+4. Name the project `WatchStream.Xbox`.
+5. Set the project location to the repository's `src` folder, so the project is created at `src/WatchStream.Xbox`.
+6. If Visual Studio asks whether to create a solution, create one named `WatchStream` in the repository root. If it offers a choice between a modern .NET UWP template and a legacy .NET Native UWP template, note which one you selected; do not assume either template is compatible with Xbox One until its target platforms and deployment options are verified.
+7. In Configuration Manager, check whether **x64** is available. Do not add media or network functionality yet.
+8. Build the untouched template first. Save the exact template name, target/minimum versions, build output and any errors.
 
-The starter project currently targets UWP SDK 10.0.19041.0 and minimum version 10.0.17763.0. These are initial compatibility settings, not a guarantee that your machine has those SDKs installed or that the package has been validated on hardware.
+**Important:** the fact that a UWP template builds on the PC does not prove it can be deployed to Xbox One. Confirm that Xbox is an available/valid target for the chosen project model before investing in implementation.
 
-## 2. Prepare Xbox One Developer Mode
+## 2. Keep the existing foundation
 
-1. Back up/sync anything important and read Microsoft's current Developer Mode guidance.
-2. Install and launch the **Xbox Dev Mode Activation** app on the console, then follow its instructions.
+The repository's `src/WatchStream.Core`, `tests/WatchStream.Core.Tests`, and existing documentation are the project foundation. Keep these files. After the new app template builds, add the existing core project to the solution only if its target framework is compatible with the app project. Do not overwrite the core contracts.
+
+## 3. Prepare Xbox One Developer Mode
+
+1. Read Microsoft's current Developer Mode guidance before changing the console.
+2. On the console, install and launch the **Xbox Dev Mode Activation** app if available to your account, then follow its instructions.
 3. Switch into Developer Mode and open Dev Home.
-4. In Dev Home, enable the console's Device Portal/network access as available in your Dev Home version. Record the console's local IP address.
+4. Enable Device Portal/network access as available in your Dev Home version and record the console's local IP address.
 5. Keep the PC and Xbox on the same trusted home network. Do not expose Device Portal to the public internet.
-
-Developer Mode changes the console into a development environment; use Dev Home's option to return to Retail Mode when you want to play normally.
 
 Official guidance:
 - https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/frequently-asked-questions
 - https://learn.microsoft.com/en-us/windows/uwp/apps-for-xbox/development-options
 - https://learn.microsoft.com/en-us/legal/windows/agreements/xbox-one-developer-mode-activation
 
-## 3. Connect Visual Studio to Xbox One
-
-1. Ensure the Xbox is in Developer Mode and a user is signed in.
-2. In Visual Studio, set the deployment target to **Remote Machine** and enter the console's local IP address.
-3. Pair/authorize the connection using the authentication options presented by your installed tooling.
-4. Deploy the app to the console. If deployment fails, first verify Developer Mode, network reachability, and SDK/tooling versions.
-5. Use a trusted private network. Microsoft's legacy UWP remote deployment instructions warn that Universal (Unencrypted Protocol) is vulnerable on untrusted networks.
-
 ## 4. Acceptance checklist
 
-- [ ] Project builds in Debug x64.
-- [ ] Package is created without manifest errors.
-- [ ] App deploys and launches on Xbox One.
-- [ ] All interactive controls are reachable with a controller.
-- [ ] Button and dialog respond to controller A/B.
-- [ ] Back navigation behaves correctly.
-- [ ] Suspend/resume does not crash.
-- [ ] App reports its current foundation status accurately.
+- [ ] A project created by Visual Studio loads without a missing-project-type error.
+- [ ] The untouched template builds successfully.
+- [ ] The chosen project model explicitly supports the intended Xbox One deployment target.
+- [ ] The existing core contracts, tests and documentation remain intact.
 - [ ] No credentials or fake Stremio account details are present.
 
 ## 5. What comes next
 
-Once the shell launches on Xbox One, record the Visual Studio version, installed Windows SDK, console OS version, build output, and any deployment errors. Then add the smallest network contract test against a documented Stremio endpoint. Do not implement speculative QR login or persist passwords.
+Once the project loads and builds, record the Visual Studio version, selected UWP template, Windows SDK, target/minimum versions, and build output. Verify Xbox One deployment compatibility before adding networking or media playback.
