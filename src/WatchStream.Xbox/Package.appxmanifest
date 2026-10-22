@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap18="http://schemas.microsoft.com/appx/manifest/uap/windows10/18"
+  IgnorableNamespaces="uap mp uap18">
+
+  <Identity
+    Name="pongadev.WatchStream"
+    Publisher="CN=lukeg"
+    Version="1.0.2.0" 
+	ProcessorArchitecture="x64" /> 
+
+  <mp:PhoneIdentity PhoneProductId="8a759e14-b72b-4567-9e78-699acf244b16" PhonePublisherId="7e42f86e-c456-4e18-a063-28872190b4cc"/>
+
+  <Properties>
+    <DisplayName>WatchStream.Xbox</DisplayName>
+    <PublisherDisplayName>Kiwi Cloud</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+ <Dependencies>
+	  <!-- targets xbox  -->
+	  <TargetDeviceFamily Name="Windows.Xbox" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+	
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="WatchStream.Xbox.App">
+      <uap:VisualElements
+        DisplayName="WatchStream"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        Description="WatchStream.Xbox"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WatchStream.Xbox": {
+      "commandName": "MsixPackage",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "192.168.1.104",
+      "authenticationMode": "Universal"
+    }
+  }
+}

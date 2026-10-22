@@ -1,0 +1,14 @@
+<Solution>
+  <Configurations>
+    <Platform Name="arm64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="src/WatchStream.Core/WatchStream.Core.csproj" />
+  <Project Path="src/WatchStream.Xbox/WatchStream.Xbox.csproj" Id="1fd931d6-808c-47ad-bbdc-43d12d926fc4">
+    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
+</Solution>

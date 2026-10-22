@@ -10,3 +10,15 @@ TestResults/
 .env
 .env.*
 secrets.json
+
+# Packaging and build artifacts
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxsym
+*.msix
+*.msixbundle
+*.msixsym
