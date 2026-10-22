@@ -18,7 +18,7 @@ namespace WatchStream.Xbox
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ReloadInstalled();
-            ManifestUrlBox.Focus(FocusState.Programmatic);
+            AddonsNavButton.Focus(FocusState.Programmatic);
         }
 
         private void ReloadInstalled()
