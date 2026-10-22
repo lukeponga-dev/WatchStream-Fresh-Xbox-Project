@@ -1,5 +1,6 @@
 using System;
 using Windows.Media.Core;
+using Windows.Media.Playback;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -11,7 +12,13 @@ namespace WatchStream.Xbox
     {
         private StreamSource? _source;
 
-        public PlayerPage() { InitializeComponent(); }
+        public PlayerPage()
+        {
+            InitializeComponent();
+            VideoPlayer.MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+            VideoPlayer.MediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
+            VideoPlayer.MediaPlayer.MediaEnded += MediaPlayer_MediaEnded;
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -21,23 +28,42 @@ namespace WatchStream.Xbox
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_source == null || !Uri.TryCreate(_source.Url, UriKind.Absolute, out var uri))
+            if (_source == null || !Uri.TryCreate(_source.Url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
             {
-                PlayerStatus.Text = "No valid stream URL was supplied.";
+                PlayerStatus.Text = "No valid HTTP(S) stream URL was supplied.";
                 return;
             }
 
             PlayerTitle.Text = _source.Name;
-            PlayerSubtitle.Text = _source.AddonName;
-            PlayerStatus.Text = "Opening the selected HTTP(S) stream. Playback depends on Xbox codec and stream compatibility.";
+            PlayerSubtitle.Text = string.IsNullOrWhiteSpace(_source.Description)
+                ? _source.AddonName
+                : _source.AddonName + "  •  " + _source.Description;
+            PlayerStatus.Text = "Connecting to stream… Xbox will report whether the media source opens or fails.";
             try
             {
                 VideoPlayer.Source = MediaSource.CreateFromUri(uri);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                PlayerStatus.Text = "Unable to open this stream: " + ex.Message;
+                PlayerStatus.Text = "Xbox couldn't create a media source for this URL. Try another stream.";
             }
+        }
+
+        private void MediaPlayer_MediaOpened(Windows.Media.Playback.MediaPlayer sender, object args)
+        {
+            PlayerStatus.Text = "Media opened successfully. Confirm video and audio playback; codec and stream compatibility can vary by Xbox model.";
+        }
+
+        private void MediaPlayer_MediaFailed(Windows.Media.Playback.MediaPlayer sender, MediaPlayerFailedEventArgs args)
+        {
+            PlayerStatus.Text = "Xbox playback failed (" + args.Error.ToString() + "). " +
+                (string.IsNullOrWhiteSpace(args.ErrorMessage) ? "Try a different stream or format." : args.ErrorMessage);
+        }
+
+        private void MediaPlayer_MediaEnded(Windows.Media.Playback.MediaPlayer sender, object args)
+        {
+            PlayerStatus.Text = "Playback ended.";
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -50,6 +76,9 @@ namespace WatchStream.Xbox
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             VideoPlayer.Source = null;
+            VideoPlayer.MediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
+            VideoPlayer.MediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
+            VideoPlayer.MediaPlayer.MediaEnded -= MediaPlayer_MediaEnded;
             base.OnNavigatedFrom(e);
         }
     }
