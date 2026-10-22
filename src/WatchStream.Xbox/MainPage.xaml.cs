@@ -47,6 +47,8 @@ namespace WatchStream.Xbox
         private void LibraryButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Library");
         private void DiscoverButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Discover");
         private void SeriesButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Series");
+        private void SearchButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Search");
+        private void AddonsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AddonsPage));
         private void SettingsButton_Click(object sender, RoutedEventArgs e) => StatusText.Text = "Settings is planned for a later milestone.";
     }
 }
