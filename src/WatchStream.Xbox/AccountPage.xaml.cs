@@ -32,8 +32,10 @@ namespace WatchStream.Xbox
             {
                 var state = await _accountService.GetSessionStateAsync(CancellationToken.None);
                 ShowSignedIn(state == AccountSessionState.SignedIn);
-                if (state == AccountSessionState.SignedOut)
+                if (state != AccountSessionState.SignedIn)
                 {
+                    if (state == AccountSessionState.ReauthenticationRequired)
+                        StatusText.Text = "Your saved Stremio session expired. Connect your account again.";
                     await CreateAndShowLinkAsync();
                     if (_showingQr) RefreshLinkButton.Focus(FocusState.Programmatic);
                 }
