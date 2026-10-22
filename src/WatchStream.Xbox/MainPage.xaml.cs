@@ -29,8 +29,8 @@ namespace WatchStream.Xbox
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            ConnectionLabel.Text = "SETUP REQUIRED";
-            StatusText.Text = "Stremio account connection is not implemented yet. Your credentials have not been requested or stored.";
+            if (Frame != null)
+                Frame.Navigate(typeof(AccountPage));
         }
 
         private void LibraryButton_Click(object sender, RoutedEventArgs e)
