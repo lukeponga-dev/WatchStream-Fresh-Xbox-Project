@@ -19,7 +19,7 @@ namespace WatchStream.Xbox
             if (sender is Button button)
             {
                 button.BorderThickness = new Thickness(3);
-                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 57, 214, 197));
+                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 82, 104, 255));
                 if (button.Content?.ToString() != "▦   Add-ons")
                     button.Background = new SolidColorBrush(Color.FromArgb(255, 45, 65, 98));
             }
@@ -30,15 +30,15 @@ namespace WatchStream.Xbox
             if (sender is Button button)
             {
                 button.BorderThickness = new Thickness(1);
-                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 42, 56, 88));
+                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 24, 59, 112));
                 if (button.Content?.ToString() == "▦   Add-ons")
                 {
-                    button.Background = new SolidColorBrush(Color.FromArgb(255, 57, 214, 197));
-                    button.Foreground = new SolidColorBrush(Color.FromArgb(255, 7, 17, 29));
+                    button.Background = new SolidColorBrush(Color.FromArgb(255, 82, 104, 255));
+                    button.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                 }
                 else
                 {
-                    button.Background = new SolidColorBrush(Color.FromArgb(255, 38, 52, 82));
+                    button.Background = new SolidColorBrush(Color.FromArgb(255, 16, 38, 75));
                     button.Foreground = new SolidColorBrush(Color.FromArgb(255, 245, 247, 255));
                 }
             }
