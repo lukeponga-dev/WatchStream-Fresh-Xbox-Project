@@ -91,7 +91,6 @@ namespace WatchStream.Xbox
                 catch (OperationCanceledException) { return; }
                 catch (Exception)
                 {
-                    // A transient poll failure must not destroy the active code.
                     StatusText.Text = "Waiting for approval. If the link expired, request a new code.";
                 }
             }
@@ -99,14 +98,14 @@ namespace WatchStream.Xbox
 
         private void ShowQrMarkup(string qrValue, string link)
         {
-            // The official API supplies the QR payload. HTML-encode both values before rendering.
+            // Stremio supplies the QR image payload. Keep the image inside the Xbox WebView bounds.
             var qr = WebUtility.HtmlEncode(qrValue);
             var fallback = WebUtility.HtmlEncode(link);
             var html = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head>" +
-                       "<body style='margin:0;background:white;display:flex;align-items:center;justify-content:center;width:100%;height:100%'>" +
-                       "<img alt='Stremio account link QR code' style='width:220px;height:220px;object-fit:contain' src='" + qr + "' " +
+                       "<body style='margin:0;padding:0;background:white;display:flex;align-items:center;justify-content:center;width:100%;height:100%;overflow:hidden'>" +
+                       "<img alt='Stremio account link QR code' style='display:block;width:144px;height:144px;max-width:100%;max-height:100%;object-fit:contain' src='" + qr + "' " +
                        "onerror=\"this.style.display='none';document.getElementById('fallback').style.display='block'\"/>" +
-                       "<div id='fallback' style='display:none;color:#111;text-align:center;font:16px sans-serif'>Scan unavailable.<br/>Open " + fallback + "</div>" +
+                       "<div id='fallback' style='display:none;color:#111;text-align:center;padding:8px;font:13px sans-serif'>QR unavailable. Open " + fallback + "</div>" +
                        "</body></html>";
             QrWebView.NavigateToString(html);
         }
@@ -209,6 +208,7 @@ namespace WatchStream.Xbox
         private void SetBusy(bool busy)
         {
             SignInButton.IsEnabled = !busy;
+            RefreshLinkButton.IsEnabled = !busy;
             BusyRing.IsActive = busy;
             BusyRing.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         }
