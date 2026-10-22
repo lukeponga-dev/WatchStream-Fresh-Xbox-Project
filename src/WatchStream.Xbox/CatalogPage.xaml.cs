@@ -57,7 +57,7 @@ namespace WatchStream.Xbox
             AllFilterButton.Content = discover ? "Movies" : "All";
             MoviesFilterButton.Content = discover ? "Series" : "Movies";
             SeriesFilterButton.Visibility = discover ? Visibility.Collapsed : Visibility.Visible;
-            _filter = "All";
+            _filter = discover ? "Movies" : "All";
             UpdateFilterButtons();
         }
 
@@ -160,6 +160,8 @@ namespace WatchStream.Xbox
                 query = query.Where(x => x.Name.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0);
             _items.Clear();
             foreach (var item in query) _items.Add(item);
+            FilteredEmptyText.Visibility = _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            MediaScrollViewer.Visibility = _items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             if (ResultsPanel.Visibility == Visibility.Visible)
                 StatusText.Text = _items.Count + " titles shown.";
         }
