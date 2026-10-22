@@ -2,41 +2,41 @@
     x:Class="WatchStream.Xbox.AddonsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Background="#0B1020" Foreground="#F5F7FF" Loaded="Page_Loaded">
+    Background="#050B1B" Foreground="#F5F7FF" Loaded="Page_Loaded">
     <Grid Padding="26,22,26,20" ColumnSpacing="24" XYFocusKeyboardNavigation="Enabled">
         <Grid.ColumnDefinitions><ColumnDefinition Width="238"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <Border Grid.Column="0" Background="#111A2E" BorderBrush="#263653" BorderThickness="1" CornerRadius="18" Padding="16">
+        <Border Grid.Column="0" Background="#07142A" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="16">
             <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="18"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <Border Width="42" Height="42" CornerRadius="11" Background="#39D6C5"><TextBlock Text="W" FontSize="25" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                    <Border Width="42" Height="42" CornerRadius="11" Background="#5268FF"><TextBlock Text="W" FontSize="25" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                     <StackPanel VerticalAlignment="Center" Spacing="1"><TextBlock Text="WATCHSTREAM" FontSize="17" FontWeight="Bold" CharacterSpacing="55"/><TextBlock Text="YOUR MEDIA, YOUR WAY" FontSize="9" Foreground="#9BA8C7" CharacterSpacing="75"/></StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Spacing="8">
                     <TextBlock Text="MENU" FontSize="11" FontWeight="Bold" Foreground="#7181A2" CharacterSpacing="160" Margin="10,0,0,5"/>
-                    <Button Content="⌂   Home" Click="HomeButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="0" UseSystemFocusVisuals="True"/>
-                    <Button Content="⌕   Search" Click="SearchButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="1" UseSystemFocusVisuals="True"/>
-                    <Button Content="▤   My Library" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True"/>
-                    <Button Content="✦   Discover" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="3" UseSystemFocusVisuals="True"/>
-                    <Button Content="▦   Add-ons" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#39D6C5" Foreground="#07111D" TabIndex="4" UseSystemFocusVisuals="True"/>
-                    <Button Content="↔   Connect Stremio" Click="ConnectButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="5" UseSystemFocusVisuals="True"/>
-                    <Button Content="⚙   Settings" Click="SettingsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="6" UseSystemFocusVisuals="True"/>
+                    <Button Content="⌂   Home" Click="HomeButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#10264B" Foreground="#F5F7FF" TabIndex="0" UseSystemFocusVisuals="True"/>
+                    <Button Content="⌕   Search" Click="SearchButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#10264B" Foreground="#F5F7FF" TabIndex="1" UseSystemFocusVisuals="True"/>
+                    <Button Content="▤   My Library" Click="LibraryButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#10264B" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True"/>
+                    <Button Content="✦   Discover" Click="DiscoverButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#10264B" Foreground="#F5F7FF" TabIndex="3" UseSystemFocusVisuals="True"/>
+                    <Button Content="▦   Add-ons" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#5268FF" Foreground="#FFFFFF" TabIndex="4" UseSystemFocusVisuals="True"/>
+                    <Button Content="↔   Connect Stremio" Click="ConnectButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="16" Background="#10264B" Foreground="#F5F7FF" TabIndex="5" UseSystemFocusVisuals="True"/>
+                    <Button Content="⚙   Settings" Click="SettingsButton_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" MinHeight="50" HorizontalContentAlignment="Left" Padding="14,0" FontSize="17" Background="#10264B" Foreground="#F5F7FF" TabIndex="6" UseSystemFocusVisuals="True"/>
                 </StackPanel>
-                <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#263653" Margin="0,0,0,8"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="10" Foreground="#7181A2"/><TextBlock Text="A SELECT   •   B BACK" FontSize="10" Foreground="#7181A2"/></StackPanel>
+                <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#183B70" Margin="0,0,0,8"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="10" Foreground="#7181A2"/><TextBlock Text="A SELECT   •   B BACK" FontSize="10" Foreground="#7181A2"/></StackPanel>
             </Grid>
         </Border>
         <Grid Grid.Column="1" RowSpacing="18">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Spacing="5"><TextBlock Text="Add-ons" FontSize="36" FontWeight="Bold"/><TextBlock Text="Manage the catalogs and streaming sources available to WatchStream." FontSize="16" Foreground="#A9B5D1" TextWrapping="Wrap"/></StackPanel>
-            <Border Grid.Row="1" CornerRadius="20" Background="#121B30" BorderBrush="#263653" BorderThickness="1" Padding="28">
+            <Border Grid.Row="1" CornerRadius="20" Background="#121B30" BorderBrush="#183B70" BorderThickness="1" Padding="28">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="700" Spacing="18">
-                    <Border Width="84" Height="84" CornerRadius="22" Background="#1D2A45" HorizontalAlignment="Center"><TextBlock Text="▦" FontSize="43" Foreground="#39D6C5" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                    <Border Width="84" Height="84" CornerRadius="22" Background="#14285A" HorizontalAlignment="Center"><TextBlock Text="▦" FontSize="43" Foreground="#5268FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                     <TextBlock Text="Your add-ons" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"/>
                     <TextBlock Text="Add-ons provide catalogs and stream sources for movies and series. This screen is ready for the installed add-on list and add-on management actions." FontSize="18" Foreground="#B7C2DC" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center"/>
                     <TextBlock Text="Installed add-on retrieval and install/remove actions are not connected yet, so no add-ons are shown here rather than displaying invented entries." FontSize="15" Foreground="#9BA8C7" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,8,0,0">
-                        <Button Content="Browse Discover" Click="DiscoverButton_Click" MinWidth="190" MinHeight="54" FontSize="17" Background="#39D6C5" Foreground="#07111D" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="7" UseSystemFocusVisuals="True"/>
-                        <Button Content="Connect Stremio" Click="ConnectButton_Click" MinWidth="190" MinHeight="54" FontSize="17" Background="#263452" Foreground="#F5F7FF" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="8" UseSystemFocusVisuals="True"/>
+                        <Button Content="Browse Discover" Click="DiscoverButton_Click" MinWidth="190" MinHeight="54" FontSize="17" Background="#5268FF" Foreground="#FFFFFF" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="7" UseSystemFocusVisuals="True"/>
+                        <Button Content="Connect Stremio" Click="ConnectButton_Click" MinWidth="190" MinHeight="54" FontSize="17" Background="#10264B" Foreground="#F5F7FF" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" TabIndex="8" UseSystemFocusVisuals="True"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
