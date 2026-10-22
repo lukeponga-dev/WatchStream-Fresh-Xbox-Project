@@ -75,7 +75,7 @@ namespace WatchStream.Xbox.Services
             }
         }
 
-        public async Task<IReadOnlyList<MediaItem>> GetDiscoverAsync(string mediaType, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<MediaItem>> GetDiscoverAsync(string mediaType, CancellationToken cancellationToken, string? searchQuery = null)
         {
             if (mediaType != "movie" && mediaType != "series")
                 throw new ArgumentException("Discover supports movie or series catalogs.", nameof(mediaType));
@@ -102,6 +102,8 @@ namespace WatchStream.Xbox.Services
                         throw new InvalidOperationException("No compatible catalog was advertised for this content type.");
 
                     var catalogUrl = "https://v3-cinemeta.strem.io/catalog/" + Uri.EscapeDataString(mediaType) + "/" + Uri.EscapeDataString(catalogId) + ".json";
+                    if (!string.IsNullOrWhiteSpace(searchQuery))
+                        catalogUrl += "?search=" + Uri.EscapeDataString(searchQuery.Trim());
                     using (var response = await _http.GetAsync(catalogUrl, cancellationToken))
                     {
                         if (!response.IsSuccessStatusCode)
@@ -130,7 +132,8 @@ namespace WatchStream.Xbox.Services
             if (entry.TryGetProperty("item", out var nested) && nested.ValueKind == JsonValueKind.Object) item = nested;
 
             var id = ReadString(item, "id") ?? ReadString(item, "_id");
-            var type = ReadString(item, "type") ?? "movie";
+            var type = ReadString(item, "type");
+            if (string.IsNullOrWhiteSpace(type)) return null;
             var name = ReadString(item, "name") ?? ReadString(item, "title");
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name)) return null;
 
