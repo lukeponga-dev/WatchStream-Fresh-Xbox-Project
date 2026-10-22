@@ -8,7 +8,10 @@ using WatchStream.Core.Contracts;
 
 namespace WatchStream.Xbox.Services
 {
-    /// <summary>Minimal adapter based on the public Stremio API client contract.</summary>
+    /// <summary>
+    /// Stremio Core-compatible account API adapter. Passwords are sent only to Stremio
+    /// and are never stored locally.
+    /// </summary>
     public sealed class StremioAccountService : IStremioAccountService
     {
         private const string ApiBase = "https://api.strem.io/api/";
@@ -25,7 +28,12 @@ namespace WatchStream.Xbox.Services
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(password))
                 throw new InvalidOperationException("Enter your Stremio email and password.");
 
-            var body = JsonSerializer.Serialize(new { authKey = (string?)null, email = email.Trim(), password });
+            // Matches stremio-core's serialized APIRequest::Auth(AuthRequest::Login).
+            // The duplicate type keys reflect the current Rust serialization contract.
+            var safeEmail = JsonSerializer.Serialize(email.Trim());
+            var safePassword = JsonSerializer.Serialize(password);
+            var body = "{\"type\":\"Auth\",\"type\":\"Login\",\"email\":" + safeEmail +
+                       ",\"password\":" + safePassword + ",\"facebook\":false}";
             using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "login"))
             {
                 request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -34,16 +42,17 @@ namespace WatchStream.Xbox.Services
                     var responseText = await response.Content.ReadAsStringAsync();
                     if (!response.IsSuccessStatusCode)
                         throw new InvalidOperationException("Stremio sign-in failed. Check your details and internet connection.");
+
                     using (var document = JsonDocument.Parse(responseText))
                     {
                         var root = document.RootElement;
-                        if (root.TryGetProperty("error", out _))
+                        if (HasApiError(root) || !TryGetResult(root, out var result))
                             throw new InvalidOperationException("Stremio sign-in failed. Check your email and password.");
-                        if (!root.TryGetProperty("result", out var result) ||
-                            !result.TryGetProperty("authKey", out var key) ||
-                            key.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(key.GetString()))
+
+                        var key = ReadString(result, "key") ?? ReadString(result, "authKey");
+                        if (string.IsNullOrWhiteSpace(key))
                             throw new InvalidOperationException("Stremio returned an unexpected sign-in response.");
-                        await _sessionStore.WriteSessionAsync(key.GetString(), cancellationToken);
+                        await _sessionStore.WriteSessionAsync(key, cancellationToken);
                     }
                 }
             }
@@ -54,10 +63,10 @@ namespace WatchStream.Xbox.Services
             var authKey = await _sessionStore.ReadSessionAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(authKey)) return AccountSessionState.SignedOut;
 
-            // A stored token is not proof that the remote session is still valid.
+            var body = "{\"type\":\"GetUser\",\"authKey\":" + JsonSerializer.Serialize(authKey) + "}";
             using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "getUser"))
             {
-                request.Content = new StringContent(JsonSerializer.Serialize(new { authKey }), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
                 using (var response = await _httpClient.SendAsync(request, cancellationToken))
                 {
                     var responseText = await response.Content.ReadAsStringAsync();
@@ -67,9 +76,9 @@ namespace WatchStream.Xbox.Services
                     using (var document = JsonDocument.Parse(responseText))
                     {
                         var root = document.RootElement;
-                        if (root.TryGetProperty("error", out _) ||
-                            !root.TryGetProperty("result", out var result) ||
-                            result.ValueKind == JsonValueKind.Null)
+                        if (HasApiError(root) || !TryGetResult(root, out var result) ||
+                            result.ValueKind == JsonValueKind.Null ||
+                            (result.ValueKind == JsonValueKind.Object && !result.EnumerateObject().MoveNext()))
                         {
                             await _sessionStore.ClearAsync(cancellationToken);
                             return AccountSessionState.ReauthenticationRequired;
@@ -87,7 +96,7 @@ namespace WatchStream.Xbox.Services
             {
                 if (!string.IsNullOrWhiteSpace(authKey))
                 {
-                    var body = JsonSerializer.Serialize(new { authKey });
+                    var body = "{\"type\":\"Logout\",\"authKey\":" + JsonSerializer.Serialize(authKey) + "}";
                     using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "logout"))
                     {
                         request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -98,5 +107,22 @@ namespace WatchStream.Xbox.Services
             }
             finally { await _sessionStore.ClearAsync(CancellationToken.None); }
         }
+
+        private static bool TryGetResult(JsonElement root, out JsonElement result)
+        {
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("result", out result))
+                return true;
+            result = default;
+            return false;
+        }
+
+        private static bool HasApiError(JsonElement root) =>
+            root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var error) &&
+            error.ValueKind != JsonValueKind.Null && error.ValueKind != JsonValueKind.False &&
+            !(error.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(error.GetString()));
+
+        private static string? ReadString(JsonElement element, string property) =>
+            element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
+            value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     }
 }
