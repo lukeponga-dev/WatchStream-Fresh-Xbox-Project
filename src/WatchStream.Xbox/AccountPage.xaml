@@ -3,70 +3,77 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="#0B1020" Foreground="#F5F7FF" Loaded="Page_Loaded">
-    <Grid Padding="56,30,56,28">
+    <Grid Padding="32,18,32,18">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
-                <Border Width="46" Height="46" CornerRadius="12" Background="#39D6C5">
-                    <TextBlock Text="W" FontSize="28" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border Width="40" Height="40" CornerRadius="10" Background="#39D6C5">
+                    <TextBlock Text="W" FontSize="25" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <StackPanel VerticalAlignment="Center" Spacing="2">
-                    <TextBlock Text="WATCHSTREAM" FontSize="25" FontWeight="Bold" CharacterSpacing="120"/>
-                    <TextBlock Text="STREMIO ACCOUNT" FontSize="11" Foreground="#9BA8C7" CharacterSpacing="160"/>
+                <StackPanel VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="WATCHSTREAM" FontSize="22" FontWeight="Bold" CharacterSpacing="100"/>
+                    <TextBlock Text="STREMIO ACCOUNT" FontSize="10" Foreground="#9BA8C7" CharacterSpacing="140"/>
                 </StackPanel>
             </StackPanel>
-            <Button Grid.Column="1" Content="Home" Click="HomeButton_Click" MinWidth="130" MinHeight="52"
-                    FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="0" UseSystemFocusVisuals="True"/>
+            <Button Grid.Column="1" Content="Home" Click="HomeButton_Click" MinWidth="110" MinHeight="46"
+                    FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="0" UseSystemFocusVisuals="True"/>
         </Grid>
-        <Grid Grid.Row="1" Margin="0,22,0,18">
-            <Border Background="#17213A" BorderBrush="#2A3858" BorderThickness="1" CornerRadius="22" Padding="28"
-                    MaxWidth="900" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel Spacing="14">
-                    <TextBlock Text="Connect your Stremio account" FontSize="30" FontWeight="Bold" TextWrapping="Wrap"/>
-                    <StackPanel x:Name="QrPanel" Spacing="12">
-                        <TextBlock Text="Scan this QR code with your phone, then sign in to Stremio to approve the link. You never need to enter your password on Xbox."
-                                   FontSize="17" Foreground="#B7C2DC" TextWrapping="Wrap"/>
-                        <Grid Height="230">
-                            <WebView x:Name="QrWebView" DefaultBackgroundColor="#FFFFFF" HorizontalAlignment="Center" Width="230" Height="230"/>
-                        </Grid>
-                        <TextBlock Text="Or open the official link page and enter this code:" FontSize="15" Foreground="#B7C2DC" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="LinkCodeText" Text="Requesting a secure link…" FontSize="34" FontWeight="Bold"
-                                   CharacterSpacing="220" HorizontalAlignment="Center" Foreground="#39D6C5"/>
-                        <TextBlock x:Name="LinkUrlText" Text="https://link.stremio.com/" FontSize="15" TextWrapping="Wrap"
-                                   HorizontalAlignment="Center" Foreground="#B7C2DC"/>
-                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                            <Button x:Name="RefreshLinkButton" Content="Get a new code" Click="RefreshLinkButton_Click"
-                                    MinHeight="54" MinWidth="190" FontSize="17" Background="#39D6C5" Foreground="#07111D"
-                                    TabIndex="1" UseSystemFocusVisuals="True"/>
-                            <Button Content="Use email instead" Click="UseEmailButton_Click" MinHeight="54" MinWidth="190"
-                                    FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True"/>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel x:Name="SignedOutPanel" Visibility="Collapsed" Spacing="10">
-                        <TextBlock Text="Email address" FontSize="16" FontWeight="SemiBold"/>
-                        <TextBox x:Name="EmailBox" PlaceholderText="you@example.com" MinHeight="54" FontSize="18" TabIndex="3" UseSystemFocusVisuals="True"/>
-                        <TextBlock Text="Password" FontSize="16" FontWeight="SemiBold" Margin="0,6,0,0"/>
-                        <PasswordBox x:Name="PasswordBox" PlaceholderText="Stremio password" MinHeight="54" FontSize="18" TabIndex="4" UseSystemFocusVisuals="True"/>
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <Button x:Name="SignInButton" Content="Sign in securely" Click="SignInButton_Click" MinHeight="56" MinWidth="220"
-                                    FontSize="18" FontWeight="SemiBold" Background="#39D6C5" Foreground="#07111D" TabIndex="5" UseSystemFocusVisuals="True"/>
-                            <Button Content="Back to QR code" Click="UseQrButton_Click" MinHeight="56" MinWidth="190"
-                                    FontSize="17" Background="#263452" Foreground="#F5F7FF" TabIndex="6" UseSystemFocusVisuals="True"/>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel x:Name="SignedInPanel" Visibility="Collapsed" Spacing="14">
-                        <TextBlock Text="You're connected" FontSize="25" FontWeight="Bold" Foreground="#39D6C5"/>
-                        <TextBlock Text="Your session key is stored in the Windows credential vault. Your password was not saved."
+
+        <ScrollViewer Grid.Row="1" Margin="0,12,0,10" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" ZoomMode="Disabled">
+            <Border Background="#17213A" BorderBrush="#2A3858" BorderThickness="1" CornerRadius="18" Padding="22"
+                    MaxWidth="820" HorizontalAlignment="Center">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Connect your Stremio account" FontSize="27" FontWeight="Bold" TextWrapping="Wrap"/>
+                    <StackPanel x:Name="QrPanel" Spacing="8">
+                        <TextBlock Text="1. Scan the QR code with your phone.  2. Sign in to Stremio and approve the link."
                                    FontSize="16" Foreground="#B7C2DC" TextWrapping="Wrap"/>
-                        <Button Content="Sign out" Click="SignOutButton_Click" MinHeight="56" MinWidth="180" FontSize="18"
+                        <Border Background="#FFFFFF" CornerRadius="8" Padding="5" HorizontalAlignment="Center">
+                            <WebView x:Name="QrWebView" DefaultBackgroundColor="#FFFFFF" Width="154" Height="154"/>
+                        </Border>
+                        <TextBlock Text="Or visit link.stremio.com and enter this code:" FontSize="15"
+                                   Foreground="#B7C2DC" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="LinkCodeText" Text="Loading…" FontSize="30" FontWeight="Bold"
+                                   CharacterSpacing="180" HorizontalAlignment="Center" Foreground="#39D6C5"/>
+                        <TextBlock x:Name="LinkUrlText" Text="https://link.stremio.com/" FontSize="14" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" Foreground="#B7C2DC"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,2,0,0">
+                            <Button x:Name="RefreshLinkButton" Content="New code" Click="RefreshLinkButton_Click"
+                                    MinHeight="48" MinWidth="150" FontSize="16" Background="#39D6C5" Foreground="#07111D"
+                                    TabIndex="1" UseSystemFocusVisuals="True"/>
+                            <Button Content="Use email instead" Click="UseEmailButton_Click" MinHeight="48" MinWidth="180"
+                                    FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="2" UseSystemFocusVisuals="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="SignedOutPanel" Visibility="Collapsed" Spacing="8">
+                        <TextBlock Text="Email address" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBox x:Name="EmailBox" PlaceholderText="you@example.com" MinHeight="50" FontSize="18" TabIndex="3" UseSystemFocusVisuals="True"/>
+                        <TextBlock Text="Password" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                        <PasswordBox x:Name="PasswordBox" PlaceholderText="Stremio password" MinHeight="50" FontSize="18" TabIndex="4" UseSystemFocusVisuals="True"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                            <Button x:Name="SignInButton" Content="Sign in securely" Click="SignInButton_Click" MinHeight="50" MinWidth="200"
+                                    FontSize="17" FontWeight="SemiBold" Background="#39D6C5" Foreground="#07111D" TabIndex="5" UseSystemFocusVisuals="True"/>
+                            <Button Content="Back to QR code" Click="UseQrButton_Click" MinHeight="50" MinWidth="170"
+                                    FontSize="16" Background="#263452" Foreground="#F5F7FF" TabIndex="6" UseSystemFocusVisuals="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="SignedInPanel" Visibility="Collapsed" Spacing="12">
+                        <TextBlock Text="You're connected" FontSize="24" FontWeight="Bold" Foreground="#39D6C5"/>
+                        <TextBlock Text="Your session key is stored securely. Your password was not saved."
+                                   FontSize="16" Foreground="#B7C2DC" TextWrapping="Wrap"/>
+                        <Button Content="Sign out" Click="SignOutButton_Click" MinHeight="50" MinWidth="160" FontSize="17"
                                 Background="#263452" Foreground="#F5F7FF" TabIndex="7" UseSystemFocusVisuals="True"/>
                     </StackPanel>
-                    <ProgressRing x:Name="BusyRing" IsActive="False" Width="42" Height="42" HorizontalAlignment="Left" Visibility="Collapsed"/>
-                    <TextBlock x:Name="StatusText" Text="Your password is never requested by the QR-link flow." FontSize="15" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <ProgressRing x:Name="BusyRing" IsActive="False" Width="24" Height="24" Visibility="Collapsed"/>
+                        <TextBlock x:Name="StatusText" Text="Your password is never requested by the QR-link flow."
+                                   FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
-        </Grid>
-        <TextBlock Grid.Row="2" Text="D-PAD / LEFT STICK  •  A SELECT  •  B BACK" FontSize="12" Foreground="#657493" VerticalAlignment="Center"/>
+        </ScrollViewer>
+        <TextBlock Grid.Row="2" Text="D-PAD / LEFT STICK  •  A SELECT  •  B BACK" FontSize="11"
+                   Foreground="#657493" VerticalAlignment="Center"/>
     </Grid>
 </Page>
