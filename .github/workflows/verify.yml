@@ -1,0 +1,54 @@
+name: Verify WatchStream
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Clean x64 build (Windows)
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Show toolchain
+        shell: pwsh
+        run: |
+          dotnet --info
+          if (-not (Get-Command msbuild.exe -ErrorAction SilentlyContinue)) {
+            Write-Error "MSBuild was not found on this runner. Install/use a Visual Studio runner with UWP build tools."
+          }
+          msbuild -version
+
+      - name: Clean
+        run: dotnet clean WatchStream.slnx --configuration Debug --property:Platform=x64
+
+      - name: Restore
+        run: dotnet restore WatchStream.slnx --property:Platform=x64
+
+      - name: Build
+        run: dotnet build WatchStream.slnx --configuration Debug --no-restore --property:Platform=x64 --property:AppxPackageSigningEnabled=false --property:GenerateAppInstallerFile=false --property:PublishAot=false
+
+  stremio-public-contracts:
+    name: Validate live public Stremio add-on responses
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Check Cinemeta manifest and catalog responses
+        shell: pwsh
+        run: ./scripts/Verify-StremioPublicApi.ps1
