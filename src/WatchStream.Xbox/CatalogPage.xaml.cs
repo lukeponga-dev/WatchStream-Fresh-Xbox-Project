@@ -46,6 +46,7 @@ namespace WatchStream.Xbox
             if (_isLoading) return;
             _isLoading = true;
             CategoryTitle.Text = _currentCategory;
+            PageSidebar.CurrentSection = _currentCategory;
             CategoryDesc.Text = "Loading content from Stremio add-ons…";
             MediaGrid.ItemsSource = null;
 

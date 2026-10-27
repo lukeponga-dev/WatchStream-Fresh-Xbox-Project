@@ -2,6 +2,7 @@
     x:Class="WatchStream.Xbox.CatalogPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WatchStream.Xbox"
     Background="#050B1B"
     Foreground="#F4F6FB"
     Loaded="Page_Loaded">
@@ -45,7 +46,10 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="64,46,64,54" XYFocusKeyboardNavigation="Enabled">
+    <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <local:NavigationSidebar x:Name="PageSidebar" Grid.Column="0" CurrentSection="Discover"/>
+        <Grid Grid.Column="1" Padding="44,36,44,42">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -85,5 +89,6 @@
                 </GridView.ItemTemplate>
             </GridView>
         </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>

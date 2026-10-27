@@ -2,10 +2,14 @@
     x:Class="WatchStream.Xbox.AccountPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WatchStream.Xbox"
     Background="#050B1B"
     Foreground="#F4F6FB"
     Loaded="AccountPage_Loaded">
-    <Grid Padding="48">
+    <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <local:NavigationSidebar Grid.Column="0" CurrentSection="Connect"/>
+        <Grid Grid.Column="1" Padding="40">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="720" Spacing="22">
             <TextBlock Text="Connect Stremio" FontSize="42" FontWeight="Bold" HorizontalAlignment="Center"/>
             <TextBlock Text="Sign in to Stremio with Facebook or your usual Stremio method, then approve this Xbox device link." FontSize="18" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
@@ -25,5 +29,6 @@
             </Border>
             <Button Content="Back to Home" Click="BackButton_Click" HorizontalAlignment="Center" Padding="24,12" MinHeight="44" Background="#142545" Foreground="White" FontSize="16"/>
         </StackPanel>
+        </Grid>
     </Grid>
 </Page>
