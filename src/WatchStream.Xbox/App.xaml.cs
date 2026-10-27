@@ -8,13 +8,21 @@ using Windows.UI.Xaml.Navigation;
 
 namespace WatchStream.Xbox
 {
-    public sealed partial class App : Application
+    public sealed partial class App : Windows.UI.Xaml.Application
     {
         public App()
         {
             InitializeComponent();
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             Suspending += OnSuspending;
+
+            // Capture global crashes to identify the exact failure point
+            this.UnhandledException += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[CRITICAL CRASH] {e.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {e.Exception.StackTrace}");
+                e.Handled = false; // Keep it crashing so we see it in the debugger, but we now have the log
+            };
         }
 
         protected override void OnLaunched(LaunchActivatedEventArgs e)

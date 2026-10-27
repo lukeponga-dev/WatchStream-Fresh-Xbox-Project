@@ -26,5 +26,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WatchStream.Core\WatchStream.Core.csproj" />
+    <ProjectReference Include="..\WatchStream.Application\WatchStream.Application.csproj" />
+    <ProjectReference Include="..\WatchStream.Domain\WatchStream.Domain.csproj" />
+    <ProjectReference Include="..\WatchStream.Infrastructure\WatchStream.Infrastructure.csproj" />
+    <Compile Include="..\WatchStream.Platform.Xbox\XboxMediaPlayer.cs" Link="Platform\XboxMediaPlayer.cs" />
   </ItemGroup>
 </Project>

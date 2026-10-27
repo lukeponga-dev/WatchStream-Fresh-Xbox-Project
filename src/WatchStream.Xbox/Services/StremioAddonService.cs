@@ -107,54 +107,61 @@ namespace WatchStream.Xbox.Services
         {
             if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(itemId))
                 throw new ArgumentException("A content type and item ID are required.");
-            var sources = new List<StreamSource>();
-            foreach (var addon in GetInstalled().Where(x => x.SupportsStreams))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                try
+
+            var streamTasks = GetInstalled()
+                .Where(x => x.SupportsStreams)
+                .Select(async addon =>
                 {
-                    var manifest = new Uri(addon.ManifestUrl);
-                    var baseBuilder = new UriBuilder(manifest)
+                    try
                     {
-                        Path = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length),
-                        Query = string.Empty,
-                        Fragment = string.Empty
-                    };
-                    var baseUri = baseBuilder.Uri;
-                    var streamUrl = new Uri(baseUri, "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json");
-                    using (var response = await Http.GetAsync(streamUrl, cancellationToken))
-                    {
-                        if (!response.IsSuccessStatusCode) continue;
-                        using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                        var manifest = new Uri(addon.ManifestUrl);
+                        var baseBuilder = new UriBuilder(manifest)
                         {
-                            if (!doc.RootElement.TryGetProperty("streams", out var streams) || streams.ValueKind != JsonValueKind.Array) continue;
-                            foreach (var stream in streams.EnumerateArray())
+                            Path = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length),
+                            Query = string.Empty,
+                            Fragment = string.Empty
+                        };
+                        var baseUri = baseBuilder.Uri;
+                        var streamUrl = new Uri(baseUri, "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json");
+
+                        using var response = await Http.GetAsync(streamUrl, cancellationToken);
+                        if (!response.IsSuccessStatusCode) return Enumerable.Empty<StreamSource>();
+
+                        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                        if (!doc.RootElement.TryGetProperty("streams", out var streams) || streams.ValueKind != JsonValueKind.Array)
+                            return Enumerable.Empty<StreamSource>();
+
+                        var foundStreams = new List<StreamSource>();
+                        foreach (var stream in streams.EnumerateArray())
+                        {
+                            var url = GetString(stream, "url");
+                            if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var parsed) ||
+                                (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)) continue;
+
+                            var title = GetString(stream, "name") ?? GetString(stream, "title") ?? "Stream";
+                            var description = GetString(stream, "description") ?? string.Empty;
+                            var behavior = GetString(stream, "quality");
+                            if (string.IsNullOrWhiteSpace(behavior) &&
+                                stream.TryGetProperty("behaviorHints", out var hints))
+                                behavior = GetString(hints, "quality");
+
+                            foundStreams.Add(new StreamSource
                             {
-                                var url = GetString(stream, "url");
-                                if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var parsed) ||
-                                    (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)) continue;
-                                var title = GetString(stream, "name") ?? GetString(stream, "title") ?? "Stream";
-                                var description = GetString(stream, "description") ?? string.Empty;
-                                var behavior = GetString(stream, "quality");
-                                if (string.IsNullOrWhiteSpace(behavior) &&
-                                    stream.TryGetProperty("behaviorHints", out var hints))
-                                    behavior = GetString(hints, "quality");
-                                sources.Add(new StreamSource
-                                {
-                                    Name = title,
-                                    Url = parsed.AbsoluteUri,
-                                    Description = description,
-                                    AddonName = addon.Name,
-                                    Quality = behavior ?? string.Empty
-                                });
-                            }
+                                Name = title,
+                                Url = parsed.AbsoluteUri,
+                                Description = description,
+                                AddonName = addon.Name,
+                                Quality = behavior ?? string.Empty
+                            });
                         }
+                        return foundStreams;
                     }
-                }
-                catch (OperationCanceledException) { throw; }
-                catch { /* One unavailable add-on must not block results from others. */ }
-            }
-            return sources;
+                    catch (OperationCanceledException) { throw; }
+                    catch { return Enumerable.Empty<StreamSource>(); }
+                });
+
+            var results = await Task.WhenAll(streamTasks);
+            return results.SelectMany(x => x).ToList();
         }
 
         private static string? GetString(JsonElement element, string property)

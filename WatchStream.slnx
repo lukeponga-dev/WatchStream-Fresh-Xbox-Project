@@ -4,6 +4,9 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="src/WatchStream.Domain/WatchStream.Domain.csproj" />
+  <Project Path="src/WatchStream.Application/WatchStream.Application.csproj" />
+  <Project Path="src/WatchStream.Infrastructure/WatchStream.Infrastructure.csproj" />
   <Project Path="src/WatchStream.Core/WatchStream.Core.csproj" />
   <Project Path="src/WatchStream.Xbox/WatchStream.Xbox.csproj" Id="1fd931d6-808c-47ad-bbdc-43d12d926fc4">
     <Platform Solution="*|arm64" Project="arm64" />

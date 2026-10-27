@@ -3,11 +3,21 @@ $ProgressPreference = 'SilentlyContinue'
 
 function Get-JsonResponse([string] $Url) {
     Write-Host "GET $Url"
-    $response = Invoke-WebRequest -Uri $Url -Method Get -TimeoutSec 25 -Headers @{ 'User-Agent' = 'WatchStream-ContractSmokeTest/1.0'; 'Accept' = 'application/json' }
-    if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
-        throw "Unexpected HTTP status $($response.StatusCode) from $Url"
+    # Follow the 307 redirects currently returned by Cinemeta catalog endpoints.
+    # curl is reliable in both Windows PowerShell and GitHub's Windows runner.
+    $raw = & curl.exe --fail --silent --show-error --location --max-time 25 --user-agent 'WatchStream-ContractSmokeTest/1.0' --header 'Accept: application/json' $Url
+    $curlExitCode = $LASTEXITCODE
+    if ($curlExitCode -ne 0) {
+        throw "HTTP request failed for $Url (curl exit code $curlExitCode)."
     }
-    return ($response.Content | ConvertFrom-Json -Depth 100)
+
+    $jsonText = $raw -join "`n"
+    try {
+        return ($jsonText | ConvertFrom-Json)
+    }
+    catch {
+        throw "Response from $Url was not valid JSON."
+    }
 }
 
 $manifestUrl = 'https://v3-cinemeta.strem.io/manifest.json'
@@ -42,5 +52,5 @@ foreach ($type in @('movie', 'series')) {
     Write-Host "PASS: $type/top returned $($result.metas.Count) valid metadata item(s)."
 }
 
-Write-Host "PASS: public Cinemeta manifest and movie/series catalog contracts look structurally valid."
-Write-Host "NOTE: this does not test authenticated account APIs, add-on stream availability, or Xbox playback."
+Write-Host 'PASS: public Cinemeta manifest and movie/series catalog contracts look structurally valid.'
+Write-Host 'NOTE: this does not test authenticated account APIs, add-on stream availability, or Xbox playback.'

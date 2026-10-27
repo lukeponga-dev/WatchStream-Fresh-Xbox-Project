@@ -85,7 +85,8 @@ namespace WatchStream.Xbox.Services
                         var baseUri = new UriBuilder(manifestUri)
                         {
                             Path = manifestUri.AbsolutePath.Substring(0, manifestUri.AbsolutePath.Length - "manifest.json".Length),
-                            Query = "", Fragment = ""
+                            Query = "",
+                            Fragment = ""
                         }.Uri;
                         var catalogUri = new Uri(baseUri, "catalog/" + Uri.EscapeDataString(mediaType) + "/" + Uri.EscapeDataString(id) + ".json");
                         if (!string.IsNullOrWhiteSpace(searchQuery) && supportsSearch)

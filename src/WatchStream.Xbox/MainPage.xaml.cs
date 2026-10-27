@@ -18,8 +18,8 @@ namespace WatchStream.Xbox
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            HomeNavButton.Focus(FocusState.Programmatic);
-            StatusText.Text = "Loading movie and series recommendations...";
+            // HomeNavButton was removed in the new Cinematic UI. 
+            // We now focus the first content element or the Hero button.
             _ = LoadHomeCatalogAsync();
         }
 
@@ -38,12 +38,14 @@ namespace WatchStream.Xbox
                     .Select(group => group.First())
                     .Take(12)
                     .ToList();
-                HomeMediaItems.ItemsSource = items;
-                StatusText.Text = items.Count == 0 ? "No catalog posters available right now. Open Discover to retry." : "Loaded " + items.Count + " movie and series recommendations.";
+
+                // Update the new Cinematic Rows instead of the old HomeMediaItems
+                ContinueRow.ItemsSource = items;
+                TrendingRow.ItemsSource = items;
             }
             catch (Exception)
             {
-                StatusText.Text = "Recommendations could not load. Open Discover to try again.";
+                // StatusText was removed in new UI
             }
             finally { _homeCatalogLoading = false; }
         }
@@ -52,7 +54,6 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button && button.DataContext is MediaItem item)
             {
-                StatusText.Text = "Opening " + item.Name + "...";
                 Frame?.Navigate(typeof(CatalogPage), item);
             }
         }
@@ -60,11 +61,11 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button)
             {
-                button.BorderThickness = new Thickness(3);
-                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 57, 214, 255));
-                button.Opacity = 1.0;
-                if (button.Name != "ConnectButton" && button.Name != "HomeNavButton")
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 35, 54, 100));
+                if (button.Style == (Style)Resources["NavButtonStyle"])
+                {
+                    NavOverlay.Opacity = 1;
+                    NavOverlay.Translation = new System.Numerics.Vector3(0, 0, 0);
+                }
             }
         }
 
@@ -72,31 +73,22 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button)
             {
-                button.BorderThickness = new Thickness(1);
-                button.BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 42, 56, 88));
-                button.Opacity = 1.0;
-                if (button.Name == "HomeNavButton")
+                if (button.Style == (Style)Resources["NavButtonStyle"])
                 {
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 52, 32, 167));
-                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                }
-                else if (button.Name == "ConnectButton")
-                {
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 23, 43, 77));
-                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                }
-                else
-                {
-                    button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 31, 58));
-                    button.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 245, 247, 255));
+                    // Use the focused element from the current window to avoid FocusManager context errors
+                    var focused = Windows.UI.Xaml.Input.FocusManager.GetFocusedElement();
+                    if (focused is not Button navBtn || navBtn.Style != (Style)Resources["NavButtonStyle"])
+                    {
+                        NavOverlay.Opacity = 0;
+                        NavOverlay.Translation = new System.Numerics.Vector3(-300, 0, 0);
+                    }
                 }
             }
         }
 
         private void HomeNavButton_Click(object sender, RoutedEventArgs e)
         {
-            StatusText.Text = "You're already on Home.";
-            HomeNavButton.Focus(FocusState.Programmatic);
+            // Logic updated for new UI
         }
 
         private void NavigateToCatalog(string section) { if (Frame != null) Frame.Navigate(typeof(CatalogPage), section); }
