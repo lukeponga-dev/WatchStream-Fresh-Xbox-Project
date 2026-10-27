@@ -24,7 +24,18 @@ namespace WatchStream.Xbox
         private void ReloadInstalled()
         {
             var installed = _addonService.GetInstalled();
-            AddonsList.ItemsSource = installed;
+            try
+            {
+                // Use a WinRT-friendly observable vector rather than an array/IReadOnlyList.
+                AddonsList.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<InstalledAddon>(installed);
+            }
+            catch (Exception ex)
+            {
+                StatusText.Text = "Add-ons list binding failed: " + ex.GetType().FullName + " | " + ex.Message + " | source=" + installed.GetType().FullName + " | count=" + installed.Count;
+                AddonsList.Visibility = Visibility.Collapsed;
+                EmptyAddonsText.Visibility = Visibility.Visible;
+                return;
+            }
             EmptyAddonsText.Visibility = installed.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             AddonsList.Visibility = installed.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             StatusText.Text = installed.Count + (installed.Count == 1 ? " add-on installed on this device." : " add-ons installed on this device.");

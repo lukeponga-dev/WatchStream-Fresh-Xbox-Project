@@ -8,17 +8,17 @@
     <Grid Padding="48">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="720" Spacing="22">
             <TextBlock Text="Connect Stremio" FontSize="42" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="Link your Xbox securely using the official Stremio account-link flow." FontSize="18" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="Sign in to Stremio with Facebook or your usual Stremio method, then approve this Xbox device link." FontSize="18" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
             <Border Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="28">
                 <StackPanel Spacing="18" HorizontalAlignment="Center">
-                    <TextBlock Text="On your phone or computer, open the official pairing page and enter this code." FontSize="16" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
+                    <TextBlock Text="1. Open the official Stremio page.  2. Choose Facebook sign-in (if offered) and authenticate.  3. Approve the device link. WatchStream will finish connecting automatically." FontSize="16" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
                     <Border Background="#05080F" BorderBrush="#39D6C5" BorderThickness="2" CornerRadius="12" Padding="18,12">
                         <TextBlock x:Name="PairingCodeText" Text="CONNECTING…" FontSize="44" FontWeight="Bold" CharacterSpacing="180" HorizontalAlignment="Center"/>
                     </Border>
                     <Border x:Name="QrCodeBorder" Width="190" Height="190" Background="White" CornerRadius="8" Padding="4" Visibility="Collapsed">
                         <WebView x:Name="PairingQrView" IsHitTestVisible="False" />
                     </Border>
-                    <Button x:Name="PairingLinkButton" Content="Open official Stremio pairing page" Click="PairingLinkButton_Click" MinHeight="48" Padding="20,8" Background="#5268FF" Foreground="White" FontSize="16"/>
+                    <Button x:Name="PairingLinkButton" Content="Continue to Stremio sign-in / pairing" Click="PairingLinkButton_Click" MinHeight="48" Padding="20,8" Background="#5268FF" Foreground="White" FontSize="16"/>
                     <TextBlock x:Name="StatusText" Text="Contacting Stremio…" FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
                     <Button x:Name="RefreshButton" Content="Generate a new code" Click="RefreshButton_Click" MinHeight="44" Padding="18,8" Background="#142545" Foreground="White"/>
                 </StackPanel>

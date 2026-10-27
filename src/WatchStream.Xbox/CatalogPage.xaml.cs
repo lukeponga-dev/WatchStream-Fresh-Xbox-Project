@@ -33,6 +33,7 @@ namespace WatchStream.Xbox
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             WatchStream.Xbox.Services.PageTransition.PlayEntrance(this);
+            _ = LoadCatalogAsync();
         }
 
         private async void CatalogPage_Loaded(object sender, RoutedEventArgs e)

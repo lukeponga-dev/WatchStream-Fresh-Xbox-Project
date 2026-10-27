@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using WatchStream.Core.Models;
 using WatchStream.Xbox.Services;
 
@@ -18,12 +19,12 @@ namespace WatchStream.Xbox
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            // Temporarily disabled to isolate the WinRT ArgumentException.
             WatchStream.Xbox.Services.PageTransition.PlayEntrance(this);
-            // Load content asynchronously and start focus on the always-visible menu entry point.
+
             _ = LoadHomeCatalogAsync();
             MenuButton.Focus(FocusState.Programmatic);
         }
-
         private void MenuButton_Click(object sender, RoutedEventArgs e)
         {
             var opening = NavOverlay.Visibility != Visibility.Visible;
@@ -76,8 +77,16 @@ namespace WatchStream.Xbox
                     .ToList();
 
                 // Update the new Cinematic Rows instead of the old HomeMediaItems
-                ContinueRow.ItemsSource = items;
+                ContinueRow.ItemsSource = items.Take(6).ToList();
                 TrendingRow.ItemsSource = items;
+                var featured = items.FirstOrDefault();
+                if (featured != null)
+                {
+                    HeroTitle.Text = featured.Name;
+                    HeroDesc.Text = string.IsNullOrWhiteSpace(featured.Description) ? "Selected for you from your available Stremio catalogs." : featured.Description;
+                    if (Uri.TryCreate(featured.Poster, UriKind.Absolute, out var posterUri) && (posterUri.Scheme == "https" || posterUri.Scheme == "http"))
+                        HeroBackdrop.Source = new BitmapImage(posterUri);
+                }
             }
             catch (Exception)
             {
@@ -85,6 +94,10 @@ namespace WatchStream.Xbox
             }
             finally { _homeCatalogLoading = false; }
         }
+
+        private void HeroPlayButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Discover");
+
+        private void HeroInfoButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Library");
 
         private void HomeMediaCard_Click(object sender, RoutedEventArgs e)
         {

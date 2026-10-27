@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using Xunit;
 using WatchStream.Core.Contracts;
 using WatchStream.Xbox.Services;
@@ -27,10 +26,11 @@ public sealed class StremioLinkServiceTests
     }
 
     [Fact]
-    public async Task TryCompleteLinkAsync_PendingErrorDoesNotPersistSession()
+    public async Task TryCompleteLinkAsync_PendingResultDoesNotPersistSession()
     {
-        var handler = new StubHandler(_ => Json(HttpStatusCode.OK,
-            "{\"error\":{\"code\":101,\"message\":\"Invalid or expired token\"}}"));
+        // While the user has not yet approved the pairing, the link Read response
+        // contains no authKey; the call must report "not completed" without persisting.
+        var handler = new StubHandler(_ => Json(HttpStatusCode.OK, "{\"result\":{}}"));
         using var client = new HttpClient(handler);
         var store = new FakeSessionStore();
         var service = new StremioLinkService(store, client);
@@ -44,14 +44,12 @@ public sealed class StremioLinkServiceTests
     }
 
     [Fact]
-    public async Task TryCompleteLinkAsync_ExchangesLinkTokenAndPersistsAccountKeyOnly()
+    public async Task TryCompleteLinkAsync_PersistsAccountKeyFromLinkRead()
     {
-        var handler = new StubHandler(request =>
-        {
-            if (request.RequestUri!.Host == "link.stremio.com")
-                return Json(HttpStatusCode.OK, "{\"result\":{\"authKey\":\"short-lived-link-token\"}}");
-            return Json(HttpStatusCode.OK, "{\"result\":{\"authKey\":\"account-session-key\",\"user\":{}}}");
-        });
+        // Once approved, the link Read response returns the account auth key directly
+        // (stremio-core LinkDataResponse::AuthKey). No further token exchange is made.
+        var handler = new StubHandler(_ => Json(HttpStatusCode.OK,
+            "{\"result\":{\"authKey\":\"account-session-key\",\"user\":{}}}"));
         using var client = new HttpClient(handler);
         var store = new FakeSessionStore();
         var service = new StremioLinkService(store, client);
@@ -60,27 +58,21 @@ public sealed class StremioLinkServiceTests
 
         Assert.True(completed);
         Assert.Equal("account-session-key", store.Session);
-        Assert.Equal(2, handler.Requests.Count);
+        Assert.Single(handler.Requests);
         Assert.Equal("https://link.stremio.com/api/v2/read?type=Read&code=A1B2", handler.Requests[0].RequestUri!.AbsoluteUri);
-        Assert.Equal("https://api.strem.io/api/loginWithToken", handler.Requests[1].RequestUri!.AbsoluteUri);
-        Assert.Equal(HttpMethod.Post, handler.Requests[1].Method);
-        using var body = JsonDocument.Parse(handler.Bodies[1]);
-        Assert.Equal("LoginWithToken", body.RootElement.GetProperty("type").GetString());
-        Assert.Equal("short-lived-link-token", body.RootElement.GetProperty("token").GetString());
-        Assert.NotEqual("short-lived-link-token", store.Session);
     }
 
     [Fact]
-    public async Task TryCompleteLinkAsync_RejectsFailedTokenExchangeWithoutPersisting()
+    public async Task TryCompleteLinkAsync_RejectsApiErrorWithoutPersisting()
     {
-        var handler = new StubHandler(request => request.RequestUri!.Host == "link.stremio.com"
-            ? Json(HttpStatusCode.OK, "{\"result\":{\"authKey\":\"short-lived-link-token\"}}")
-            : Json(HttpStatusCode.OK, "{\"error\":{\"code\":1,\"message\":\"rejected\"}}"));
+        // A rejected/expired link code is surfaced as an error and must not persist a session.
+        var handler = new StubHandler(_ => Json(HttpStatusCode.OK,
+            "{\"error\":{\"code\":1,\"message\":\"rejected\"}}"));
         using var client = new HttpClient(handler);
         var store = new FakeSessionStore();
         var service = new StremioLinkService(store, client);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TryCompleteLinkAsync("A1B2", CancellationToken.None));
+        await Assert.ThrowsAsync<StremioLinkException>(() => service.TryCompleteLinkAsync("A1B2", CancellationToken.None));
         Assert.Null(store.Session);
     }
 

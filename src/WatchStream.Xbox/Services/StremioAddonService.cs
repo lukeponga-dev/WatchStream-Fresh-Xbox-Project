@@ -110,7 +110,8 @@ namespace WatchStream.Xbox.Services
             if (string.IsNullOrWhiteSpace(authKey))
                 throw new InvalidOperationException("Connect your Stremio account before syncing its add-ons.");
 
-            var body = JsonSerializer.Serialize(new { authKey, update = true, addFromURL = Array.Empty<string>() });
+            // APIRequest is internally tagged in stremio-core; the method name is part of the JSON contract.
+            var body = JsonSerializer.Serialize(new { type = "AddonCollectionGet", authKey, update = true, addFromURL = Array.Empty<string>() });
             using (var request = new HttpRequestMessage(HttpMethod.Post, "https://api.strem.io/api/addonCollectionGet"))
             {
                 request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");

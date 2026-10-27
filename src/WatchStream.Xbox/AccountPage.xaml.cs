@@ -15,6 +15,7 @@ namespace WatchStream.Xbox
         private CancellationTokenSource? _pollingCancellation;
         private StremioLinkCode? _currentLink;
         private bool _creatingLink;
+        private bool _pairingPageOpened;
 
         public AccountPage()
         {
@@ -40,6 +41,7 @@ namespace WatchStream.Xbox
             PairingCodeText.Text = "LOADING…";
             StatusText.Text = "Requesting a secure account-link code from Stremio…";
             _currentLink = null;
+            _pairingPageOpened = false;
 
             try
             {
@@ -51,8 +53,7 @@ namespace WatchStream.Xbox
                 PairingCodeText.Text = link.Code.ToUpperInvariant();
                 RenderQrPayload(link.QrCode);
                 PairingLinkButton.Content = "Open Stremio pairing page";
-                StatusText.Text = "Waiting for approval on your phone or computer. This screen will update automatically.";
-                _ = PollForApprovalAsync(link.Code, cancellationToken);
+                StatusText.Text = "Open the pairing page, sign in to Stremio, and approve this device. Then return here and select the button again to finish linking.";
             }
             catch (OperationCanceledException) { }
             catch (Exception)
@@ -90,12 +91,21 @@ namespace WatchStream.Xbox
                     });
                 }
                 catch (OperationCanceledException) { return; }
+                catch (StremioLinkException ex)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                            StatusText.Text = ex.Message;
+                    });
+                    return;
+                }
                 catch (Exception)
                 {
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
-                            StatusText.Text = "Still waiting for Stremio. Retrying automatically…";
+                            StatusText.Text = "Stremio is temporarily unreachable. Retrying automatically…";
                     });
                 }
 
@@ -133,10 +143,61 @@ namespace WatchStream.Xbox
 
         private async void PairingLinkButton_Click(object sender, RoutedEventArgs e)
         {
-            var target = _currentLink?.Link;
-            if (!Uri.TryCreate(target, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
-                uri = new Uri("https://link.stremio.com/");
-            await Launcher.LaunchUriAsync(uri);
+            if (_currentLink == null || _linkService == null)
+            {
+                await CreateLinkAsync();
+                return;
+            }
+
+            if (!_pairingPageOpened)
+            {
+                var target = _currentLink.Link;
+                if (!Uri.TryCreate(target, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+                    uri = new Uri("https://link.stremio.com/");
+
+                var launched = await Launcher.LaunchUriAsync(uri);
+                if (launched)
+                {
+                    _pairingPageOpened = true;
+                    PairingLinkButton.Content = "I've approved — finish linking";
+                    StatusText.Text = "Complete sign-in and approve the device in the browser. Return to WatchStream and select “I've approved — finish linking”.";
+                }
+                else
+                {
+                    StatusText.Text = "Couldn't open the pairing page. Open the displayed link on another device, approve it, then select the button again.";
+                    _pairingPageOpened = true;
+                    PairingLinkButton.Content = "I've approved — finish linking";
+                }
+                return;
+            }
+
+            PairingLinkButton.IsEnabled = false;
+            StatusText.Text = "Checking the approved pairing code with Stremio…";
+            try
+            {
+                if (await _linkService.TryCompleteLinkAsync(_currentLink.Code, _pollingCancellation?.Token ?? CancellationToken.None))
+                {
+                    StatusText.Text = "Account connected. Loading WatchStream…";
+                    Frame?.Navigate(typeof(MainPage));
+                }
+                else
+                {
+                    StatusText.Text = "Stremio hasn't confirmed approval yet. Finish approving the device in your browser, then try again.";
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (StremioLinkException ex)
+            {
+                StatusText.Text = ex.Message;
+            }
+            catch (Exception)
+            {
+                StatusText.Text = "Stremio couldn't finish linking. Confirm approval and try again.";
+            }
+            finally
+            {
+                PairingLinkButton.IsEnabled = true;
+            }
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)

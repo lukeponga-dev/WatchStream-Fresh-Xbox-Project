@@ -3,11 +3,11 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:converters="using:WatchStream.Xbox.Converters"
-  Background="#05080F"
+  Background="#050B1B"
   Foreground="#F4F6FB"
   Loaded="Page_Loaded">
   <Page.Resources>
-    <SolidColorBrush x:Key="AccentBrush" Color="#9BEA38" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#39D6C5" />
     <SolidColorBrush x:Key="GlassBrush" Color="#CC121824" />
     <SolidColorBrush x:Key="MutedBrush" Color="#9BA5B5" />
 
@@ -64,15 +64,15 @@
                   <VisualState x:Name="Normal" />
                   <VisualState x:Name="Focused">
                     <Storyboard>
-                      <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="ScaleX" To="1.15" Duration="0:0:0.2"/>
-                      <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="ScaleY" To="1.15" Duration="0:0:0.2"/>
-                      <ColorAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#9BEA38" Duration="0:0:0.2"/>
+                      <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.06" Duration="0:0:0.2"/>
+                      <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.06" Duration="0:0:0.2"/>
+                      <ColorAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#39D6C5" Duration="0:0:0.2"/>
                       <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
                     </Storyboard>
                   </VisualState>
                 </VisualStateGroup>
               </VisualStateManager.VisualStateGroups>
-              <Border x:Name="Glow" BorderBrush="#9BEA38" BorderThickness="3" CornerRadius="12" Opacity="0" Margin="5"/>
+              <Border x:Name="Glow" BorderBrush="#39D6C5" BorderThickness="3" CornerRadius="12" Opacity="0" Margin="5"/>
               <Grid x:Name="CardContent" RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform>
                   <ScaleTransform ScaleX="1" ScaleY="1"/>
@@ -89,11 +89,11 @@
   <Grid XYFocusKeyboardNavigation="Enabled">
     <!-- 1. Background Layer: Cinematic Backdrop -->
     <Grid>
-      <Image x:Name="HeroBackdrop" Stretch="UniformToFill" Opacity="0.4" />
+      <Image x:Name="HeroBackdrop" Stretch="UniformToFill" Opacity="0.52" />
       <Border>
         <Border.Background>
           <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#05080F" Offset="0.0" />
+            <GradientStop Color="#050B1B" Offset="0.0" />
             <GradientStop Color="Transparent" Offset="1.0" />
           </LinearGradientBrush>
         </Border.Background>
@@ -105,21 +105,21 @@
       <StackPanel Margin="60,0,60,0" Spacing="40" Padding="0,80,0,80">
         
         <!-- Hero Section -->
-        <Grid Height="450" VerticalAlignment="Top">
-          <StackPanel VerticalAlignment="Bottom" Spacing="12" MaxWidth="600">
-            <TextBlock Text="FEATURED" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" CharacterSpacing="200"/>
+        <Grid Height="470" VerticalAlignment="Top" Margin="0,10,0,0">
+          <StackPanel VerticalAlignment="Bottom" Spacing="14" MaxWidth="720" Margin="0,0,0,12">
+            <TextBlock Text="YOUR STREAMING UNIVERSE" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" CharacterSpacing="200"/>
             <TextBlock x:Name="HeroTitle" Text="Welcome to WatchStream" FontSize="56" FontWeight="Bold" LineHeight="64" TextWrapping="Wrap"/>
-            <TextBlock x:Name="HeroDesc" Text="Experience your library in cinematic quality." FontSize="18" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
+            <TextBlock x:Name="HeroDesc" Text="Discover something great. Your Stremio library and compatible add-ons, all in one place." FontSize="20" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
             <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,10,0,0">
-               <Button Content="▶ Play Now" Background="{StaticResource AccentBrush}" Foreground="#000" FontWeight="Bold" Padding="24,12" CornerRadius="8" MinWidth="160"/>
-               <Button Content="More Info" Background="#33FFFFFF" Foreground="#FFF" Padding="24,12" CornerRadius="8" MinWidth="160"/>
+               <Button x:Name="HeroPlayButton" Content="▶  EXPLORE NOW" Click="HeroPlayButton_Click" Background="{StaticResource AccentBrush}" Foreground="#06121D" FontWeight="Bold" FontSize="16" Padding="26,14" CornerRadius="8" MinWidth="190" MinHeight="54" TabIndex="1"/>
+               <Button x:Name="HeroInfoButton" Content="MY LIBRARY  →" Click="HeroInfoButton_Click" Background="#CC17233A" Foreground="#FFF" BorderBrush="#447D91A9" BorderThickness="1" FontSize="15" Padding="24,14" CornerRadius="8" MinWidth="180" MinHeight="54" TabIndex="2"/>
             </StackPanel>
           </StackPanel>
         </Grid>
 
         <!-- Content Rows (Dynamic) -->
         <StackPanel Spacing="24">
-          <TextBlock Text="Continue Watching" FontSize="24" FontWeight="SemiBold" />
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"><Border Width="4" Height="28" Background="{StaticResource AccentBrush}" CornerRadius="2"/><TextBlock Text="Pick up where you left off" FontSize="27" FontWeight="SemiBold"/><TextBlock Text="YOUR LIBRARY" FontSize="11" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="10,3,0,0"/></StackPanel>
           <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Left">
              <ItemsControl x:Name="ContinueRow">
                <ItemsControl.ItemsPanel>
@@ -127,9 +127,9 @@
                </ItemsControl.ItemsPanel>
                <ItemsControl.ItemTemplate>
                  <DataTemplate>
-                   <Button Style="{StaticResource CinematicCardButtonStyle}" Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Width="180" Height="260">
+                   <Button Style="{StaticResource CinematicCardButtonStyle}" Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Width="190" Height="275">
                      <Grid>
-                       <Image Source="{Binding Poster, Converter={StaticResource PosterConverter}}" Stretch="UniformToFill" Width="180" Height="260"/>
+                       <Image Source="{Binding Poster, Converter={StaticResource PosterConverter}}" Stretch="UniformToFill" Width="190" Height="275"/>
                        <Border Background="#99000000" VerticalAlignment="Bottom" Height="60" CornerRadius="0,0,12,12" Padding="12,0,12,0">
                          <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                        </Border>
@@ -142,7 +142,7 @@
         </StackPanel>
 
         <StackPanel Spacing="24">
-          <TextBlock Text="Trending Now" FontSize="24" FontWeight="SemiBold" />
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"><Border Width="4" Height="28" Background="#5268FF" CornerRadius="2"/><TextBlock Text="Explore more" FontSize="27" FontWeight="SemiBold"/><TextBlock Text="MOVIES &amp; SERIES" FontSize="11" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="10,3,0,0"/></StackPanel>
           <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Left">
              <ItemsControl x:Name="TrendingRow">
                <ItemsControl.ItemsPanel>
@@ -150,9 +150,9 @@
                </ItemsControl.ItemsPanel>
                <ItemsControl.ItemTemplate>
                  <DataTemplate>
-                   <Button Style="{StaticResource CinematicCardButtonStyle}" Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Width="180" Height="260">
+                   <Button Style="{StaticResource CinematicCardButtonStyle}" Click="HomeMediaCard_Click" GotFocus="Control_GotFocus" LostFocus="Control_LostFocus" Width="190" Height="275">
                      <Grid>
-                       <Image Source="{Binding Poster, Converter={StaticResource PosterConverter}}" Stretch="UniformToFill" Width="180" Height="260"/>
+                       <Image Source="{Binding Poster, Converter={StaticResource PosterConverter}}" Stretch="UniformToFill" Width="190" Height="275"/>
                        <Border Background="#99000000" VerticalAlignment="Bottom" Height="60" CornerRadius="0,0,12,12" Padding="12,0,12,0">
                          <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                        </Border>
