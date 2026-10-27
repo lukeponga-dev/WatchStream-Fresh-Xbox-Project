@@ -63,6 +63,24 @@ namespace WatchStream.Xbox
             }
         }
 
+        private async void SyncAccountButton_Click(object sender, RoutedEventArgs e)
+        {
+            SyncAccountButton.IsEnabled = false;
+            StatusText.Text = "Syncing add-ons from your Stremio account…";
+            try
+            {
+                var imported = await _addonService.SyncFromAccountAsync(new SecureSessionStore(), CancellationToken.None);
+                ReloadInstalled();
+                StatusText.Text = "Stremio sync complete. Imported or refreshed " + imported +
+                    " compatible add-on(s). Legacy add-on transports are not imported by this version.";
+            }
+            catch (Exception ex)
+            {
+                StatusText.Text = ex.Message;
+            }
+            finally { SyncAccountButton.IsEnabled = true; }
+        }
+
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is string url)

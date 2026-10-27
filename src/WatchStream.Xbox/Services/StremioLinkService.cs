@@ -1,26 +1,33 @@
 using System;
 using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
 using WatchStream.Core.Contracts;
 
 namespace WatchStream.Xbox.Services
 {
     /// <summary>
-    /// Implements the link API contract used by Stremio Core:
-    /// GET https://link.stremio.com/api/v2/create?type=Create
-    /// GET https://link.stremio.com/api/v2/read?type=Read&code={code}
+    /// Implements Stremio Core's account-link contract. The link token is exchanged
+    /// with the account API; only the resulting account auth key is persisted.
     /// </summary>
     public sealed class StremioLinkService
     {
         private const string LinkApiBase = "https://link.stremio.com/api/v2/";
-        private readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        private const string AccountApiBase = "https://api.strem.io/api/";
+        private readonly HttpClient _httpClient;
         private readonly ISessionStore _sessionStore;
 
         public StremioLinkService(ISessionStore sessionStore)
+            : this(sessionStore, new HttpClient { Timeout = TimeSpan.FromSeconds(20) })
+        {
+        }
+
+        public StremioLinkService(ISessionStore sessionStore, HttpClient httpClient)
         {
             _sessionStore = sessionStore ?? throw new ArgumentNullException(nameof(sessionStore));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
         public async Task<StremioLinkCode> CreateLinkAsync(CancellationToken cancellationToken)
@@ -32,25 +39,21 @@ namespace WatchStream.Xbox.Services
                 using (var document = JsonDocument.Parse(text))
                 {
                     var root = document.RootElement;
-                    if (!root.TryGetProperty("result", out var result) ||
-                        !result.TryGetProperty("code", out var code) ||
-                        !result.TryGetProperty("link", out var link) ||
-                        !result.TryGetProperty("qrcode", out var qr) ||
-                        code.ValueKind != JsonValueKind.String ||
-                        link.ValueKind != JsonValueKind.String ||
-                        qr.ValueKind != JsonValueKind.String)
-                    {
+                    if (!TryGetResult(root, out var result) ||
+                        !TryReadString(result, "code", out var code) ||
+                        !TryReadString(result, "link", out var link) ||
+                        !TryReadString(result, "qrcode", out var qr))
                         throw new InvalidOperationException("Stremio returned an unexpected link response.");
-                    }
 
-                    return new StremioLinkCode(code.GetString()!, link.GetString()!, qr.GetString()!);
+                    return new StremioLinkCode(code, link, qr);
                 }
             }
         }
 
         /// <summary>
-        /// Returns true and persists the auth key only after Stremio reports an approved link.
-        /// A pending/empty response returns false. API errors are surfaced for retry by the caller.
+        /// Checks whether a device link has been approved, exchanges the temporary link
+        /// token using Stremio's loginWithToken API, then persists only the account session key.
+        /// A pending/expired link response returns false; failed exchanges are surfaced.
         /// </summary>
         public async Task<bool> TryCompleteLinkAsync(string code, CancellationToken cancellationToken)
         {
@@ -58,24 +61,70 @@ namespace WatchStream.Xbox.Services
                 throw new ArgumentException("A link code is required.", nameof(code));
 
             var url = LinkApiBase + "read?type=Read&code=" + Uri.EscapeDataString(code);
+            string? linkToken;
             using (var response = await _httpClient.GetAsync(url, cancellationToken))
             {
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                    return false;
+
                 var text = await response.Content.ReadAsStringAsync();
                 using (var document = JsonDocument.Parse(text))
                 {
                     var root = document.RootElement;
-                    if (!root.TryGetProperty("result", out var result) ||
-                        !result.TryGetProperty("authKey", out var authKey) ||
-                        authKey.ValueKind != JsonValueKind.String ||
-                        string.IsNullOrWhiteSpace(authKey.GetString()))
+                    if (!TryGetResult(root, out var result) ||
+                        !TryReadString(result, "authKey", out linkToken))
                         return false;
+                }
+            }
 
-                    await _sessionStore.WriteSessionAsync(authKey.GetString(), cancellationToken);
-                    return true;
+            var requestBody = JsonSerializer.Serialize(new { type = "LoginWithToken", token = linkToken });
+            using (var request = new HttpRequestMessage(HttpMethod.Post, AccountApiBase + "loginWithToken"))
+            {
+                request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                using (var response = await _httpClient.SendAsync(request, cancellationToken))
+                {
+                    var text = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException("Stremio couldn't finish account linking. Please generate a new code and try again.");
+
+                    using (var document = JsonDocument.Parse(text))
+                    {
+                        var root = document.RootElement;
+                        if (HasApiError(root) || !TryGetResult(root, out var result) ||
+                            !TryReadString(result, "authKey", out var accountKey))
+                            throw new InvalidOperationException("Stremio rejected the account-link token. Please generate a new code and try again.");
+
+                        await _sessionStore.WriteSessionAsync(accountKey, cancellationToken);
+                        return true;
+                    }
                 }
             }
         }
+
+        private static bool TryGetResult(JsonElement root, out JsonElement result)
+        {
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("result", out result))
+                return true;
+            result = default;
+            return false;
+        }
+
+        private static bool TryReadString(JsonElement element, string property, out string value)
+        {
+            value = string.Empty;
+            if (element.ValueKind != JsonValueKind.Object ||
+                !element.TryGetProperty(property, out var candidate) ||
+                candidate.ValueKind != JsonValueKind.String ||
+                string.IsNullOrWhiteSpace(candidate.GetString()))
+                return false;
+            value = candidate.GetString()!;
+            return true;
+        }
+
+        private static bool HasApiError(JsonElement root) =>
+            root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var error) &&
+            error.ValueKind != JsonValueKind.Null && error.ValueKind != JsonValueKind.False &&
+            !(error.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(error.GetString()));
     }
 
     public sealed class StremioLinkCode

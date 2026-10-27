@@ -18,9 +18,45 @@ namespace WatchStream.Xbox
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            // HomeNavButton was removed in the new Cinematic UI. 
-            // We now focus the first content element or the Hero button.
+            WatchStream.Xbox.Services.PageTransition.PlayEntrance(this);
+            // Load content asynchronously and start focus on the always-visible menu entry point.
             _ = LoadHomeCatalogAsync();
+            MenuButton.Focus(FocusState.Programmatic);
+        }
+
+        private void MenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            var opening = NavOverlay.Visibility != Visibility.Visible;
+            if (opening)
+            {
+                NavOverlay.Visibility = Visibility.Visible;
+                NavOverlay.IsHitTestVisible = true;
+                NavOverlay.Opacity = 1;
+                MenuButton.Content = "✕  CLOSE MENU";
+                HomeNavButton.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                CloseNavigation();
+                MenuButton.Focus(FocusState.Programmatic);
+            }
+        }
+
+        private void CloseNavigation()
+        {
+            NavOverlay.Opacity = 0;
+            NavOverlay.IsHitTestVisible = false;
+            NavOverlay.Visibility = Visibility.Collapsed;
+            MenuButton.Content = "☰  MENU";
+        }
+
+        // The app-level B/Back handler calls this before navigating away from Home.
+        public bool TryCloseNavigation()
+        {
+            if (NavOverlay.Visibility != Visibility.Visible) return false;
+            CloseNavigation();
+            MenuButton.Focus(FocusState.Programmatic);
+            return true;
         }
 
         private async Task LoadHomeCatalogAsync()
@@ -54,51 +90,54 @@ namespace WatchStream.Xbox
         {
             if (sender is Button button && button.DataContext is MediaItem item)
             {
-                Frame?.Navigate(typeof(CatalogPage), item);
+                DateTime? releaseDate = DateTime.TryParse(item.Year, out var parsedYear) ? parsedYear : null;
+                var detailsItem = new WatchStream.Domain.Models.MediaItem(
+                    item.Id, item.Name, item.Type, item.Description,
+                    string.IsNullOrWhiteSpace(item.Poster) ? null : item.Poster, releaseDate);
+                Frame?.Navigate(typeof(DetailsPage), detailsItem);
             }
         }
         private void Control_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button)
-            {
-                if (button.Style == (Style)Resources["NavButtonStyle"])
-                {
-                    NavOverlay.Opacity = 1;
-                    NavOverlay.Translation = new System.Numerics.Vector3(0, 0, 0);
-                }
-            }
+            // Card focus styling is defined in CinematicCardButtonStyle; no translation is needed here.
         }
 
         private void Control_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button)
-            {
-                if (button.Style == (Style)Resources["NavButtonStyle"])
-                {
-                    // Use the focused element from the current window to avoid FocusManager context errors
-                    var focused = Windows.UI.Xaml.Input.FocusManager.GetFocusedElement();
-                    if (focused is not Button navBtn || navBtn.Style != (Style)Resources["NavButtonStyle"])
-                    {
-                        NavOverlay.Opacity = 0;
-                        NavOverlay.Translation = new System.Numerics.Vector3(-300, 0, 0);
-                    }
-                }
-            }
+            // Keep focus changes visual-only; navigation visibility is controlled by the menu button.
         }
 
         private void HomeNavButton_Click(object sender, RoutedEventArgs e)
         {
-            // Logic updated for new UI
+            CloseNavigation();
+            MenuButton.Focus(FocusState.Programmatic);
         }
 
-        private void NavigateToCatalog(string section) { if (Frame != null) Frame.Navigate(typeof(CatalogPage), section); }
+        private void NavigateToCatalog(string section)
+        {
+            CloseNavigation();
+            Frame?.Navigate(typeof(CatalogPage), section);
+        }
+
         private void BrowseButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Library");
-        private void ConnectButton_Click(object sender, RoutedEventArgs e) { Frame?.Navigate(typeof(AccountPage)); }
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseNavigation();
+            Frame?.Navigate(typeof(AccountPage));
+        }
         private void LibraryButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Library");
         private void DiscoverButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Discover");
         private void SeriesButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Series");
         private void SearchButton_Click(object sender, RoutedEventArgs e) => NavigateToCatalog("Search");
-        private void AddonsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(AddonsPage));
-        private void SettingsButton_Click(object sender, RoutedEventArgs e) => Frame?.Navigate(typeof(SettingsPage));
+        private void AddonsButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseNavigation();
+            Frame?.Navigate(typeof(AddonsPage));
+        }
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseNavigation();
+            Frame?.Navigate(typeof(SettingsPage));
+        }
     }
 }

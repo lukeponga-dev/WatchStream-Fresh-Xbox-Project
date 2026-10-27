@@ -31,9 +31,10 @@
             <StackPanel Grid.Row="0" Spacing="5"><TextBlock Text="Add-ons" FontSize="36" FontWeight="Bold"/><TextBlock Text="Install compatible Stremio add-ons and manage their availability in WatchStream." FontSize="16" Foreground="#A9B5D1" TextWrapping="Wrap"/></StackPanel>
             <Border Grid.Row="1" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="14" Padding="18">
                 <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel Spacing="6"><TextBlock Text="ADD-ON MANIFEST URL" FontSize="11" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="100"/><TextBox x:Name="ManifestUrlBox" PlaceholderText="https://example-addon.com/manifest.json" MinHeight="48" FontSize="16" TabIndex="7"/></StackPanel>
-                    <Button Grid.Column="1" x:Name="InstallButton" Content="＋  Install add-on" Click="InstallButton_Click" MinWidth="180" MinHeight="48" VerticalAlignment="Bottom" Background="#5268FF" Foreground="White" FontSize="16" TabIndex="8"/>
+                    <Button Grid.Column="1" x:Name="InstallButton" Content="＋  Install add-on" Click="InstallButton_Click" MinWidth="170" MinHeight="48" Margin="0,0,8,0" VerticalAlignment="Bottom" Background="#5268FF" Foreground="White" FontSize="16" TabIndex="8"/>
+                    <Button Grid.Column="2" x:Name="SyncAccountButton" Content="↻  Sync Stremio" Click="SyncAccountButton_Click" MinWidth="160" MinHeight="48" VerticalAlignment="Bottom" Background="#142545" Foreground="White" FontSize="16" TabIndex="9"/>
                 </Grid>
             </Border>
             <Border Grid.Row="2" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="14" Padding="18">

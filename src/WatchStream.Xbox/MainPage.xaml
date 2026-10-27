@@ -5,8 +5,7 @@
   xmlns:converters="using:WatchStream.Xbox.Converters"
   Background="#05080F"
   Foreground="#F4F6FB"
-  Loaded="Page_Loaded"
->
+  Loaded="Page_Loaded">
   <Page.Resources>
     <SolidColorBrush x:Key="AccentBrush" Color="#9BEA38" />
     <SolidColorBrush x:Key="GlassBrush" Color="#CC121824" />
@@ -171,20 +170,27 @@
     <!-- 3. Overlay Layer: Slide-out Navigation -->
     <Border x:Name="NavOverlay" Width="300" HorizontalAlignment="Left" Background="{StaticResource GlassBrush}" 
             BorderBrush="#20FFFFFF" BorderThickness="0,0,1,0" CornerRadius="0,20,20,0"
-            Translation="0,0,20"  Opacity="0">
+            Visibility="Collapsed" IsHitTestVisible="False" Opacity="0">
       <Grid Margin="20,40,20,20">
         <StackPanel Spacing="8">
           <TextBlock Text="WATCHSTREAM" FontSize="20" FontWeight="Bold" Margin="12,0,0,30" CharacterSpacing="100" Foreground="{StaticResource AccentBrush}"/>
-          <Button Content="Home" Style="{StaticResource NavButtonStyle}" Click="HomeNavButton_Click" TabIndex="0"/>
+          <Button x:Name="HomeNavButton" Content="Home" Style="{StaticResource NavButtonStyle}" Click="HomeNavButton_Click" TabIndex="0"/>
           <Button Content="Discover" Style="{StaticResource NavButtonStyle}" Click="DiscoverButton_Click" TabIndex="1"/>
           <Button Content="My Library" Style="{StaticResource NavButtonStyle}" Click="LibraryButton_Click" TabIndex="2"/>
           <Button Content="Series" Style="{StaticResource NavButtonStyle}" Click="SeriesButton_Click" TabIndex="3"/>
           <Button Content="Search" Style="{StaticResource NavButtonStyle}" Click="SearchButton_Click" TabIndex="4"/>
           <Border Height="1" Background="#20FFFFFF" Margin="12,20,12,20"/>
           <Button Content="Add-ons" Style="{StaticResource NavButtonStyle}" Click="AddonsButton_Click" TabIndex="5"/>
-          <Button Content="Settings" Style="{StaticResource NavButtonStyle}" Click="SettingsButton_Click" TabIndex="6"/>
+          <Button Content="Connect Stremio" Style="{StaticResource NavButtonStyle}" Click="ConnectButton_Click" TabIndex="6"/>
+          <Button Content="Settings" Style="{StaticResource NavButtonStyle}" Click="SettingsButton_Click" TabIndex="7"/>
         </StackPanel>
       </Grid>
     </Border>
+
+    <!-- Always-visible entry point keeps the drawer discoverable with a controller or mouse. -->
+    <Button x:Name="MenuButton" Content="☰  MENU" HorizontalAlignment="Left" VerticalAlignment="Top"
+            Margin="28,24,0,0" Padding="18,10" MinWidth="120" MinHeight="48"
+            Background="#CC121824" Foreground="#F4F6FB" BorderBrush="#33FFFFFF"
+            BorderThickness="1" CornerRadius="8" Click="MenuButton_Click" TabIndex="0"/>
   </Grid>
 </Page>

@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="#05080F"
-    Foreground="#F4F6FB">
+    Foreground="#F4F6FB"
+    Loaded="Page_Loaded">
 
     <Page.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="#9BEA38" />
@@ -69,7 +70,7 @@
                 
                 <StackPanel Spacing="16">
                     <TextBlock Text="AVAILABLE STREAMS" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" CharacterSpacing="150"/>
-                    
+                    <TextBlock x:Name="StreamsStatusText" Text="Streams will appear here." FontSize="14" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
                     <ItemsControl x:Name="StreamsList">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -78,7 +79,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Style="{StaticResource StreamSourceButtonStyle}" Click="PlayButton_Click" HorizontalAlignment="Stretch">
+                                <Button Style="{StaticResource StreamSourceButtonStyle}" Click="PlayButton_Click" GotFocus="StreamButton_GotFocus" HorizontalAlignment="Stretch">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>

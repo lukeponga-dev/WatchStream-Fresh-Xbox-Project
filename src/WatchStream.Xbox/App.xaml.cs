@@ -51,8 +51,24 @@ namespace WatchStream.Xbox
         private void OnBackRequested(object sender, BackRequestedEventArgs e)
         {
             e.Handled = true;
-            if (Window.Current.Content is Frame rootFrame && rootFrame.CanGoBack)
+            if (Window.Current.Content is not Frame rootFrame) return;
+
+            // Overlay and page navigation are separate layers: dismiss the overlay before
+            // touching the navigation stack.
+            if (rootFrame.Content is MainPage homePage && homePage.TryCloseNavigation())
+                return;
+
+            if (rootFrame.CanGoBack)
+            {
                 rootFrame.GoBack();
+                return;
+            }
+
+            // No prior page exists. Keep the app open and let the current page handle Back.
+            if (rootFrame.Content is PlayerPage playerPage)
+                playerPage.HandleBack();
+            else if (rootFrame.Content is DetailsPage detailsPage)
+                detailsPage.HandleBack();
         }
 
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)

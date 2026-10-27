@@ -2,42 +2,28 @@
     x:Class="WatchStream.Xbox.AccountPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Background="#05080F"
-    Foreground="#F4F6FB">
-
-    <Page.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#9BEA38" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#9BA5B5" />
-    </Page.Resources>
-
-    <Grid Padding="60">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600" Spacing="32">
-            
-            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                <TextBlock Text="Connect Stremio" FontSize="42" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White"/>
-                <TextBlock Text="Pair your Xbox with your account" FontSize="18" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center"/>
-            </StackPanel>
-
-            <Border Background="#121824" CornerRadius="24" Padding="40" BorderBrush="#20FFFFFF" BorderThickness="1">
-                <StackPanel Spacing="24" HorizontalAlignment="Center">
-                    <TextBlock Text="Please visit the website below on your phone or computer:" 
-                               FontSize="16" Foreground="#D9DFE9" TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap"/>
-                    
-                    <TextBlock Text="stremio.tv/activate" FontSize="24" FontWeight="SemiBold" 
-                               Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" CharacterSpacing="100"/>
-                    
-                    <TextBlock Text="And enter the pairing code:" FontSize="16" Foreground="#D9DFE9" HorizontalAlignment="Center"/>
-                    
-                    <Border Background="#05080F" Padding="20" CornerRadius="12" BorderBrush="#33FFFFFF" BorderThickness="1">
-                        <TextBlock x:Name="PairingCodeText" Text="LOADING..." FontSize="48" FontWeight="Bold" 
-                                   Foreground="White" HorizontalAlignment="Center" CharacterSpacing="200"/>
+    Background="#050B1B"
+    Foreground="#F4F6FB"
+    Loaded="AccountPage_Loaded">
+    <Grid Padding="48">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="720" Spacing="22">
+            <TextBlock Text="Connect Stremio" FontSize="42" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Link your Xbox securely using the official Stremio account-link flow." FontSize="18" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <Border Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="28">
+                <StackPanel Spacing="18" HorizontalAlignment="Center">
+                    <TextBlock Text="On your phone or computer, open the official pairing page and enter this code." FontSize="16" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
+                    <Border Background="#05080F" BorderBrush="#39D6C5" BorderThickness="2" CornerRadius="12" Padding="18,12">
+                        <TextBlock x:Name="PairingCodeText" Text="CONNECTING…" FontSize="44" FontWeight="Bold" CharacterSpacing="180" HorizontalAlignment="Center"/>
                     </Border>
+                    <Border x:Name="QrCodeBorder" Width="190" Height="190" Background="White" CornerRadius="8" Padding="4" Visibility="Collapsed">
+                        <WebView x:Name="PairingQrView" IsHitTestVisible="False" />
+                    </Border>
+                    <Button x:Name="PairingLinkButton" Content="Open official Stremio pairing page" Click="PairingLinkButton_Click" MinHeight="48" Padding="20,8" Background="#5268FF" Foreground="White" FontSize="16"/>
+                    <TextBlock x:Name="StatusText" Text="Contacting Stremio…" FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
+                    <Button x:Name="RefreshButton" Content="Generate a new code" Click="RefreshButton_Click" MinHeight="44" Padding="18,8" Background="#142545" Foreground="White"/>
                 </StackPanel>
             </Border>
-
-            <Button x:Name="BackButton" Content="Back to Home" Click="BackButton_Click" 
-                    HorizontalAlignment="Center" Padding="24,12" CornerRadius="8" 
-                    Background="#22FFFFFF" Foreground="White" FontSize="16"/>
+            <Button Content="Back to Home" Click="BackButton_Click" HorizontalAlignment="Center" Padding="24,12" MinHeight="44" Background="#142545" Foreground="White" FontSize="16"/>
         </StackPanel>
     </Grid>
 </Page>

@@ -97,6 +97,62 @@ namespace WatchStream.Xbox.Services
             }
         }
 
+        /// <summary>
+        /// Pulls the signed-in user's Stremio add-on collection. The official API's
+        /// addonCollectionGet method returns add-on descriptors; this client imports only
+        /// HTTPS descriptors that point at a modern /manifest.json endpoint.
+        /// Legacy /stremio/v1 endpoints are left untouched rather than guessed at.
+        /// </summary>
+        public async Task<int> SyncFromAccountAsync(WatchStream.Core.Contracts.ISessionStore sessionStore, CancellationToken cancellationToken)
+        {
+            if (sessionStore == null) throw new ArgumentNullException(nameof(sessionStore));
+            var authKey = await sessionStore.ReadSessionAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(authKey))
+                throw new InvalidOperationException("Connect your Stremio account before syncing its add-ons.");
+
+            var body = JsonSerializer.Serialize(new { authKey, update = true, addFromURL = Array.Empty<string>() });
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "https://api.strem.io/api/addonCollectionGet"))
+            {
+                request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                using (var response = await Http.SendAsync(request, cancellationToken))
+                {
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException("Stremio could not return your add-on collection.");
+                    using (var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                    {
+                        var root = document.RootElement;
+                        if (root.TryGetProperty("error", out var error) && error.ValueKind != JsonValueKind.Null &&
+                            !(error.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(error.GetString())))
+                            throw new InvalidOperationException("Stremio rejected the add-on sync request.");
+                        if (!root.TryGetProperty("result", out var result) ||
+                            !result.TryGetProperty("addons", out var addons) || addons.ValueKind != JsonValueKind.Array)
+                            throw new InvalidOperationException("Stremio returned an unexpected add-on collection response.");
+
+                        var imported = 0;
+                        foreach (var descriptor in addons.EnumerateArray())
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            var transportUrl = GetString(descriptor, "transportUrl") ?? GetString(descriptor, "transport_url");
+                            if (!Uri.TryCreate(transportUrl, UriKind.Absolute, out var addonUri) ||
+                                addonUri.Scheme != Uri.UriSchemeHttps ||
+                                !addonUri.AbsolutePath.EndsWith("/manifest.json", StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            try
+                            {
+                                await InstallAsync(addonUri.AbsoluteUri, cancellationToken);
+                                imported++;
+                            }
+                            catch (OperationCanceledException) { throw; }
+                            catch { /* Keep syncing other valid descriptors if one add-on is offline. */ }
+                        }
+
+                        return imported;
+                    }
+                }
+            }
+        }
+
         public void Remove(string manifestUrl)
         {
             var installed = GetInstalled().Where(x => !string.Equals(x.ManifestUrl, manifestUrl, StringComparison.OrdinalIgnoreCase)).ToList();

@@ -1,4 +1,4 @@
-# Stremio account integration notes
+# Stremio API integration notes
 
 ## Verified upstream behavior
 
@@ -8,27 +8,25 @@ The public [Stremio Core source](https://github.com/Stremio/stremio-core) define
 - Create link: `GET https://link.stremio.com/api/v2/create?type=Create`.
 - The create response has a `result` object with `code`, `link`, and `qrcode` string fields.
 - Read link state: `GET https://link.stremio.com/api/v2/read?type=Read&code={code}`.
-- When the link is approved, the read response contains `result.authKey`. The app must persist that key as the account session; it must never ask the phone user to send a password to WatchStream.
-- The official web page at [link.stremio.com](https://link.stremio.com/) explicitly asks users to enter the four-character code displayed by the app.
-- The account API remains `https://api.strem.io/api/{method}`; the existing email/password fallback uses its documented `login` and `logout` methods.
+- The approved link response supplies a temporary `result.authKey` token. Exchange it with `POST https://api.strem.io/api/loginWithToken` using JSON `type: "LoginWithToken"` and `token: <temporary-token>`. Persist only the resulting account response's `result.authKey`; do not persist the temporary link token.
+- The official `stremio-api-client` sends API methods as POST JSON to `https://api.strem.io/api/{method}`, merging the session `authKey` into method parameters.
+- The official add-on collection client uses `addonCollectionGet` with `update: true` and `addFromURL: []` to pull the signed-in user's add-on descriptors.
 
-These details are grounded in the public Stremio Core implementation, not inferred endpoint names. They are still upstream implementation contracts rather than a promise of permanent third-party API stability.
+These are upstream implementation contracts, not a guarantee that undocumented APIs will remain stable.
 
 ## Current WatchStream implementation
 
-- `StremioLinkService` calls the verified v2 create/read endpoints and reads the returned QR payload, code, and link.
-- `AccountPage` displays the QR payload, the four-character code, and the official link page as a manual fallback.
-- WatchStream polls the read endpoint every three seconds while the account-link screen is active. It stores the returned `authKey` only when the response includes one, then stops polling.
-- A new code can be requested from the screen. The app does not assume or display an expiry duration because the upstream response contract inspected here does not specify one.
-- Email/password sign-in remains available as a fallback. The password is not persisted.
-- The session key is persisted behind `ISessionStore`, using the Windows `PasswordVault` adapter.
-- Sign-out attempts API logout and clears local session material even if the remote call fails.
+- `AccountPage` creates a pairing code, shows the code and official link, displays QR data when the returned payload is a supported image data URI or HTTPS image URI, and polls every three seconds while active.
+- `StremioLinkService` exchanges the temporary link token with `loginWithToken` and stores only the account session key.
+- `SecureSessionStore` persists the session key using Windows `PasswordVault`.
+- Discover/catalog search reads manifest-defined catalog resources from installed modern add-ons plus Cinemeta. Library reads the signed-in account's `libraryItem` datastore collection.
+- The Add-ons page can install HTTPS `/manifest.json` add-ons and pull compatible descriptors from the user's Stremio add-on collection. This version imports only modern manifest URLs; legacy `/stremio/v1` descriptors are deliberately skipped rather than guessed.
+- Details resolve stream resources from locally installed add-ons. The add-on protocol defines `/catalog/{type}/{id}.json`, `/meta/{type}/{id}.json`, and `/stream/{type}/{videoID}.json` resources.
 
-## Security and verification still required
+## Remaining verification and limitations
 
-- Build and run on the target Xbox One to verify `PasswordVault`, `WebView.NavigateToString`, and the account-link screen in the selected modern .NET/UWP project model.
-- Verify that the returned `qrcode` value is renderable by the Xbox WebView; if the upstream representation changes, the visible code and official link remain the fallback.
-- Test create-link errors, pending reads, approved link, refresh/new code, app navigation cancellation, invalid email/password, offline/timeout, app restart session restore, and sign-out.
+- Local add-on installation is stored per device. This version pulls supported add-on descriptors from the Stremio account but does not yet push locally installed add-ons back to the account.
+- Verify the QR payload representation and the pairing UI on Xbox hardware; if the payload is not a supported image URI, the visible code and official link remain the fallback.
+- Exercise successful and pending pairing, token exchange failure, network timeouts, session restoration, library parsing, and add-on sync with a real test account.
 - Review session expiry and reauthentication behavior before shipping.
-- Confirm current Stremio API terms and supported authentication flow before public distribution.
 - Never include real credentials or auth keys in source control, logs, test fixtures, crash reports, or screenshots.
