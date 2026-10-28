@@ -129,8 +129,8 @@ namespace WatchStream.Xbox
             var cancellationToken = _pollingCancellation.Token;
 
             RefreshButton.IsEnabled = false;
-            PairingCodeText.Text = "LOADINGâ€¦";
-            StatusText.Text = "Requesting a secure account-link code from Stremioâ€¦";
+            PairingCodeText.Text = "LOADING...";
+            StatusText.Text = "Requesting a secure account-link code from Stremio...";
             _currentLink = null;
             _pairingPageOpened = false;
 
@@ -169,7 +169,7 @@ namespace WatchStream.Xbox
                     {
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
-                            StatusText.Text = "Account connected. Loading WatchStreamâ€¦";
+                            StatusText.Text = "Account connected. Loading WatchStream...";
                             Frame?.Navigate(typeof(MainPage));
                         });
                         return;
@@ -178,7 +178,7 @@ namespace WatchStream.Xbox
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
-                            StatusText.Text = "Waiting for approval on your phone or computerâ€¦";
+                            StatusText.Text = "Waiting for approval on your phone or computer...";
                     });
                 }
                 catch (OperationCanceledException) { return; }
@@ -196,7 +196,7 @@ namespace WatchStream.Xbox
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
-                            StatusText.Text = "Stremio is temporarily unreachable. Retrying automaticallyâ€¦";
+                            StatusText.Text = "Stremio is temporarily unreachable. Retrying automatically...";
                     });
                 }
 
@@ -250,25 +250,25 @@ namespace WatchStream.Xbox
                 if (launched)
                 {
                     _pairingPageOpened = true;
-                    PairingLinkButton.Content = "I've approved â€” finish linking";
-                    StatusText.Text = "Complete sign-in and approve the device in the browser. Return to WatchStream and select â€œI've approved â€” finish linkingâ€.";
+                    PairingLinkButton.Content = "I've approved - finish linking";
+                    StatusText.Text = "Complete sign-in and approve the device in the browser. Return to WatchStream and select the finish-linking button.";
                 }
                 else
                 {
                     StatusText.Text = "Couldn't open the pairing page. Open the displayed link on another device, approve it, then select the button again.";
                     _pairingPageOpened = true;
-                    PairingLinkButton.Content = "I've approved â€” finish linking";
+                    PairingLinkButton.Content = "I've approved - finish linking";
                 }
                 return;
             }
 
             PairingLinkButton.IsEnabled = false;
-            StatusText.Text = "Checking the approved pairing code with Stremioâ€¦";
+            StatusText.Text = "Checking the approved pairing code with Stremio...";
             try
             {
                 if (await _linkService.TryCompleteLinkAsync(_currentLink.Code, _pollingCancellation?.Token ?? CancellationToken.None))
                 {
-                    StatusText.Text = "Account connected. Loading WatchStreamâ€¦";
+                    StatusText.Text = "Account connected. Loading WatchStream...";
                     Frame?.Navigate(typeof(MainPage));
                 }
                 else

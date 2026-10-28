@@ -17,6 +17,9 @@ BundleArtifacts/
 Package.StoreAssociation.xml
 _pkginfo.txt
 *.appx
+*.appinstaller
+*.appxupload
+*.msixupload
 *.appxbundle
 *.appxsym
 *.msix

@@ -18,5 +18,7 @@
     <ProjectReference Include="..\..\src\WatchStream.Core\WatchStream.Core.csproj" />
     <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioLinkService.cs" Link="Production\StremioLinkService.cs" />
     <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioProtocolParser.cs" Link="Production\StremioProtocolParser.cs" />
+    <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioAddonSecurity.cs" Link="Production\StremioAddonSecurity.cs" />
+    <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioAddonStoreCodec.cs" Link="Production\StremioAddonStoreCodec.cs" />
   </ItemGroup>
 </Project>

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Windows.Security.Credentials;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -46,7 +48,7 @@ namespace WatchStream.Xbox.Services
         public List<AddonCatalog> Catalogs { get; set; } = new List<AddonCatalog>();
         public bool SupportsStreams => Resources.Any(x => string.Equals(x.Name, "stream", StringComparison.OrdinalIgnoreCase));
         public bool SupportsCatalogs => Resources.Any(x => string.Equals(x.Name, "catalog", StringComparison.OrdinalIgnoreCase)) && Catalogs.Count > 0;
-        public string Capabilities => (SupportsCatalogs ? "Catalogs" : "No catalogs") + " Â· " + (SupportsStreams ? "Streams" : "No streams");
+        public string Capabilities => (SupportsCatalogs ? "Catalogs" : "No catalogs") + " | " + (SupportsStreams ? "Streams" : "No streams");
         public bool SupportsResource(string name, string type, string? id)
         {
             return Resources.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase) &&
@@ -61,14 +63,17 @@ namespace WatchStream.Xbox.Services
         public string Description { get; set; } = string.Empty;
         public string AddonName { get; set; } = string.Empty;
         public string Quality { get; set; } = string.Empty;
-        public string DisplayName => string.IsNullOrWhiteSpace(Quality) ? Name : Name + "  â€¢  " + Quality;
+        public string DisplayName => string.IsNullOrWhiteSpace(Quality) ? Name : Name + " - " + Quality;
     }
 
     /// <summary>Installs public HTTPS Stremio add-ons from their manifest and resolves documented stream resources.</summary>
     public sealed class StremioAddonService
     {
         private const string SettingsKey = "WatchStream.InstalledAddons.v1";
-        private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        private const string AddonUrlVaultResource = "WatchStream.AddonManifestUrl.v1";
+        private static readonly HttpClient Http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
+        private static readonly object DirectoryCacheLock = new object();
+        private static readonly Dictionary<string, (DateTimeOffset ExpiresAt, IReadOnlyList<AddonDirectoryEntry> Results)> DirectoryCache = new Dictionary<string, (DateTimeOffset, IReadOnlyList<AddonDirectoryEntry>)>(StringComparer.Ordinal);
 
         private static string InstalledAddonsPath => Path.Combine(ApplicationData.Current.LocalFolder.Path, "installed-addons.json");
 
@@ -79,7 +84,19 @@ namespace WatchStream.Xbox.Services
                 if (File.Exists(InstalledAddonsPath))
                 {
                     var fileJson = File.ReadAllText(InstalledAddonsPath);
-                    return JsonSerializer.Deserialize<List<InstalledAddon>>(fileJson, WatchStreamJson.Options) ?? new List<InstalledAddon>();
+                    var vault = new PasswordVault();
+                    var restoredJson = StremioAddonStoreCodec.RestoreSerializedUrls(fileJson, key =>
+                    {
+                        var credential = vault.FindAllByResource(AddonUrlVaultResource)
+                            .FirstOrDefault(x => string.Equals(x.UserName, key, StringComparison.Ordinal));
+                        if (credential == null) return null;
+                        credential.RetrievePassword();
+                        return credential.Password;
+                    }, out var needsMigration);
+
+                    var addons = JsonSerializer.Deserialize<List<InstalledAddon>>(restoredJson, WatchStreamJson.Options) ?? new List<InstalledAddon>();
+                    if (needsMigration) SaveInstalled(addons);
+                    return addons;
                 }
 
                 // Migrate older installs from LocalSettings, which has a small per-value size limit.
@@ -95,9 +112,30 @@ namespace WatchStream.Xbox.Services
 
         private static void SaveInstalled(IReadOnlyList<InstalledAddon> addons)
         {
-            var json = JsonSerializer.Serialize(addons, WatchStreamJson.Options);
-            File.WriteAllText(InstalledAddonsPath, json);
+            var vault = new PasswordVault();
+            var activeKeys = new HashSet<string>(StringComparer.Ordinal);
+            var protectedJson = StremioAddonStoreCodec.ProtectSerializedUrls(
+                JsonSerializer.Serialize(addons, WatchStreamJson.Options), url =>
+                {
+                    var key = Guid.NewGuid().ToString("N");
+                    vault.Add(new PasswordCredential(AddonUrlVaultResource, key, url));
+                    activeKeys.Add(key);
+                    return key;
+                });
+
+            // The JSON file contains only opaque vault keys, never full manifest URLs or query secrets.
+            File.WriteAllText(InstalledAddonsPath, protectedJson);
             ApplicationData.Current.LocalSettings.Values.Remove(SettingsKey);
+
+            try
+            {
+                foreach (var credential in vault.FindAllByResource(AddonUrlVaultResource))
+                {
+                    if (!activeKeys.Contains(credential.UserName))
+                        vault.Remove(credential);
+                }
+            }
+            catch { /* No existing credentials is a normal first-run state. */ }
         }
 
         public sealed class AddonDirectoryEntry
@@ -115,15 +153,27 @@ namespace WatchStream.Xbox.Services
         /// <summary>Searches the public Stremio Addons community directory. API is experimental and read-only.</summary>
         public async Task<IReadOnlyList<AddonDirectoryEntry>> SearchDirectoryAsync(string? search, CancellationToken cancellationToken)
         {
+#if !WATCHSTREAM_ADDON_DIRECTORY_PERMISSION_GRANTED
+            await Task.CompletedTask;
+            throw new InvalidOperationException("The Stremio Addons directory is disabled until written permission for this integration is confirmed.");
+#else
+            var cacheKey = string.IsNullOrWhiteSpace(search) ? string.Empty : search.Trim().ToLowerInvariant();
+            lock (DirectoryCacheLock)
+            {
+                if (DirectoryCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresAt > DateTimeOffset.UtcNow)
+                    return cached.Results;
+                DirectoryCache.Remove(cacheKey);
+            }
+
             var query = "https://stremio-addons.net/api/v0/addons?sort_by=stars&order=desc&limit=25&nsfw=exclude";
             if (!string.IsNullOrWhiteSpace(search))
                 query += "&search=" + Uri.EscapeDataString(search.Trim());
 
-            using (var response = await Http.GetAsync(query, cancellationToken))
+            using (var response = await GetSafeAsync(new Uri(query), cancellationToken))
             {
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException("The Stremio Addons directory is temporarily unavailable.");
-                using (var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                using (var document = JsonDocument.Parse(await ReadResponseTextAsync(response, cancellationToken)))
                 {
                     var root = document.RootElement;
                     if (!root.TryGetProperty("addons", out var addons) || addons.ValueKind != JsonValueKind.Array)
@@ -135,7 +185,7 @@ namespace WatchStream.Xbox.Services
                             ? value : default;
                         var name = GetString(manifest, "name");
                         var manifestUrl = GetString(item, "manifestUrl");
-                        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(manifestUrl))
+                        if (string.IsNullOrWhiteSpace(name) || !StremioAddonSecurity.IsValidManifestUri(manifestUrl))
                             continue;
                         var categories = new List<string>();
                         if (item.TryGetProperty("categories", out var categoryArray) && categoryArray.ValueKind == JsonValueKind.Array)
@@ -150,35 +200,41 @@ namespace WatchStream.Xbox.Services
                         {
                             Name = name,
                             Description = GetString(manifest, "description") ?? string.Empty,
-                            ManifestUrl = manifestUrl,
+                            ManifestUrl = manifestUrl!,
                             PageUrl = GetString(item, "url") ?? "https://stremio-addons.net/",
                             ConfigureUrl = GetString(item, "configureUrl") ?? string.Empty,
                             Stars = stars,
                             Categories = string.Join(" · ", categories)
                         });
                     }
-                    return results;
+                    var snapshot = results.AsReadOnly();
+                    lock (DirectoryCacheLock)
+                    {
+                        if (DirectoryCache.Count >= 32) DirectoryCache.Clear();
+                        DirectoryCache[cacheKey] = (DateTimeOffset.UtcNow.AddHours(12), snapshot);
+                    }
+                    return snapshot;
                 }
             }
+#endif
         }
 
         public async Task<InstalledAddon> InstallAsync(string manifestUrl, CancellationToken cancellationToken)
         {
             if (!Uri.TryCreate(manifestUrl?.Trim(), UriKind.Absolute, out var uri))
                 throw new InvalidOperationException("Enter a valid add-on manifest URL ending in /manifest.json.");
-            if (uri.Scheme != Uri.UriSchemeHttps &&
-                !(uri.Scheme == Uri.UriSchemeHttp && (uri.IsLoopback || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))))
-                throw new InvalidOperationException("Add-ons must use HTTPS. HTTP is allowed only for localhost development.");
+            StremioAddonSecurity.ValidateRequestUri(uri, allowLocalhostHttp: uri.IsLoopback && uri.Scheme == Uri.UriSchemeHttp);
             if (!uri.AbsolutePath.EndsWith("/manifest.json", StringComparison.OrdinalIgnoreCase) &&
                 !uri.AbsolutePath.Equals("/manifest.json", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The URL must point to the add-on's /manifest.json endpoint.");
 
-            using (var response = await Http.GetAsync(uri, cancellationToken))
+            using (var response = await GetSafeAsync(uri, cancellationToken, allowLocalhostHttp: uri.IsLoopback && uri.Scheme == Uri.UriSchemeHttp))
             {
                 if (!response.IsSuccessStatusCode) throw new InvalidOperationException("The add-on manifest could not be downloaded.");
-                using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                using (var doc = JsonDocument.Parse(await ReadResponseTextAsync(response, cancellationToken)))
                 {
                     var root = doc.RootElement;
+                    StremioAddonSecurity.ValidateManifest(root);
                     var id = GetString(root, "id");
                     var name = GetString(root, "name");
                     if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
@@ -238,7 +294,7 @@ namespace WatchStream.Xbox.Services
                 throw new InvalidOperationException("Connect your Stremio account before syncing its add-ons.");
 
             // APIRequest is internally tagged in stremio-core; the method name is part of the JSON contract.
-            var body = JsonSerializer.Serialize(new { type = "AddonCollectionGet", authKey, update = true }, WatchStreamJson.Options);
+            var body = JsonSerializer.Serialize(new { type = "AddonCollectionGet", authKey, update = true, addFromURL = Array.Empty<string>() }, WatchStreamJson.Options);
             using (var request = new HttpRequestMessage(HttpMethod.Post, "https://api.strem.io/api/addonCollectionGet"))
             {
                 request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
@@ -246,13 +302,13 @@ namespace WatchStream.Xbox.Services
                 {
                     if (!response.IsSuccessStatusCode)
                         throw new InvalidOperationException("Stremio could not return your add-on collection.");
-                    using (var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                    using (var document = JsonDocument.Parse(await ReadResponseTextAsync(response, cancellationToken)))
                     {
                         var root = document.RootElement;
                         if (root.TryGetProperty("error", out var error) && error.ValueKind != JsonValueKind.Null &&
                             !(error.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(error.GetString())))
                             throw new InvalidOperationException("Stremio rejected the add-on sync request.");
-                        if (!root.TryGetProperty("result", out var result) ||
+                        if (!root.TryGetProperty("result", out var result) || result.ValueKind != JsonValueKind.Object ||
                             !result.TryGetProperty("addons", out var addons) || addons.ValueKind != JsonValueKind.Array)
                             throw new InvalidOperationException("Stremio returned an unexpected add-on collection response.");
 
@@ -314,7 +370,7 @@ namespace WatchStream.Xbox.Services
                                 imported++;
                             }
                             catch (OperationCanceledException) { throw; }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 var unavailable = existing ?? new InstalledAddon
                                 {
@@ -326,7 +382,7 @@ namespace WatchStream.Xbox.Services
                                 if (!string.Equals(unavailable.InstallSource, "Manual", StringComparison.OrdinalIgnoreCase))
                                     unavailable.InstallSource = "Account";
                                 unavailable.SyncStatus = "Unavailable";
-                                unavailable.Description = "The add-on is in your Stremio account but its manifest could not be loaded: " + ex.Message;
+                                unavailable.Description = "The add-on is in your Stremio account but its manifest could not be loaded. Check the connection and try again.";
                                 accountAddons.Add(unavailable);
                             }
                         }
@@ -377,15 +433,27 @@ namespace WatchStream.Xbox.Services
                     try
                     {
                         var streamUrl = BuildResourceUri(addon.ManifestUrl, "stream", type, itemId, null);
-                        using var response = await Http.GetAsync(streamUrl, cancellationToken);
+                        using var response = await GetSafeAsync(streamUrl, cancellationToken, allowLocalhostHttp: streamUrl.IsLoopback && streamUrl.Scheme == Uri.UriSchemeHttp);
                         if (!response.IsSuccessStatusCode) return Enumerable.Empty<StreamSource>();
 
-                        var parsedStreams = StremioProtocolParser.ParseStreams(await response.Content.ReadAsStringAsync());
-                        var foundStreams = parsedStreams.Select(stream => new StreamSource
+                        var parsedStreams = StremioProtocolParser.ParseStreams(await ReadResponseTextAsync(response, cancellationToken));
+                        var foundStreams = new List<StreamSource>();
+                        foreach (var stream in parsedStreams)
                         {
-                            Name = stream.Name, Url = stream.Url, Description = stream.Description,
-                            AddonName = addon.Name, Quality = stream.Quality
-                        }).ToList();
+                            if (!StremioAddonSecurity.IsValidStreamUri(stream.Url)) continue;
+                            try
+                            {
+                                await ValidateResolvedHostAsync(new Uri(stream.Url), cancellationToken);
+                            }
+                            catch (OperationCanceledException) { throw; }
+                            catch { continue; }
+
+                            foundStreams.Add(new StreamSource
+                            {
+                                Name = stream.Name, Url = stream.Url, Description = stream.Description,
+                                AddonName = addon.Name, Quality = stream.Quality
+                            });
+                        }
                         return foundStreams;
                     }
                     catch (OperationCanceledException) { throw; }
@@ -403,9 +471,10 @@ namespace WatchStream.Xbox.Services
             var supplied = extra ?? new Dictionary<string, string>();
             foreach (var required in catalog.Extra.Where(x => x.IsRequired))
                 if (!supplied.TryGetValue(required.Name, out var value) || string.IsNullOrWhiteSpace(value)) throw new InvalidOperationException("Catalog requires the extra parameter: " + required.Name);
-            using var response = await Http.GetAsync(BuildResourceUri(addon.ManifestUrl, "catalog", catalog.Type, catalog.Id, supplied), cancellationToken);
+            var catalogUri = BuildResourceUri(addon.ManifestUrl, "catalog", catalog.Type, catalog.Id, supplied);
+            using var response = await GetSafeAsync(catalogUri, cancellationToken, allowLocalhostHttp: catalogUri.IsLoopback && catalogUri.Scheme == Uri.UriSchemeHttp);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            return await ReadResponseTextAsync(response, cancellationToken);
         }
 
         public async Task<string?> RequestMetadataAsync(string type, string itemId, CancellationToken cancellationToken)
@@ -414,9 +483,10 @@ namespace WatchStream.Xbox.Services
             {
                 try
                 {
-                    using var response = await Http.GetAsync(BuildResourceUri(addon.ManifestUrl, "meta", type, itemId, null), cancellationToken);
+                    var metadataUri = BuildResourceUri(addon.ManifestUrl, "meta", type, itemId, null);
+                    using var response = await GetSafeAsync(metadataUri, cancellationToken, allowLocalhostHttp: metadataUri.IsLoopback && metadataUri.Scheme == Uri.UriSchemeHttp);
                     if (!response.IsSuccessStatusCode) continue;
-                    var json = await response.Content.ReadAsStringAsync();
+                    var json = await ReadResponseTextAsync(response, cancellationToken);
                     using var doc = JsonDocument.Parse(json);
                     if (doc.RootElement.TryGetProperty("meta", out var meta) && meta.ValueKind == JsonValueKind.Object) return meta.GetRawText();
                 }
@@ -426,15 +496,45 @@ namespace WatchStream.Xbox.Services
             return null;
         }
 
+        private static async Task<HttpResponseMessage> GetSafeAsync(Uri uri, CancellationToken cancellationToken, bool allowLocalhostHttp = false)
+        {
+            var current = StremioAddonSecurity.ValidateRequestUri(uri, allowLocalhostHttp);
+            for (var redirects = 0; ; redirects++)
+            {
+                if (!(allowLocalhostHttp && current.IsLoopback && current.Scheme == Uri.UriSchemeHttp))
+                    await ValidateResolvedHostAsync(current, cancellationToken);
+                var response = await Http.GetAsync(current, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                if ((int)response.StatusCode < 300 || (int)response.StatusCode >= 400)
+                    return response;
+
+                var location = response.Headers.Location;
+                response.Dispose();
+                current = StremioAddonSecurity.ValidateRedirectTarget(current, location, redirects);
+            }
+        }
+
+        private static async Task ValidateResolvedHostAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            if (IPAddress.TryParse(uri.DnsSafeHost, out var literalAddress))
+            {
+                if (StremioAddonSecurity.IsNonPublicAddress(literalAddress))
+                    throw new InvalidOperationException("Add-on URLs must not target private or reserved network addresses.");
+                return;
+            }
+
+            var addresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost, cancellationToken);
+            if (addresses.Length == 0 || addresses.Any(StremioAddonSecurity.IsNonPublicAddress))
+                throw new InvalidOperationException("The add-on hostname resolves to a private or reserved network address.");
+        }
+
+        private static Task<string> ReadResponseTextAsync(HttpResponseMessage response, CancellationToken cancellationToken, int maxBytes = 2 * 1024 * 1024)
+        {
+            return StremioAddonSecurity.ReadBoundedResponseTextAsync(response.Content, cancellationToken, maxBytes);
+        }
+
         public static Uri BuildResourceUri(string manifestUrl, string resource, string type, string id, IDictionary<string, string>? extra)
         {
-            var manifest = new Uri(manifestUrl);
-            var basePath = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length);
-            var route = resource.TrimEnd('/') + "/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(id);
-            if (extra != null && extra.Count > 0)
-                route += "/" + string.Join("&", extra.Select(x => Uri.EscapeDataString(x.Key) + "=" + Uri.EscapeDataString(x.Value)));
-            var builder = new UriBuilder(manifest) { Path = basePath + route + ".json", Query = manifest.Query.TrimStart('?') , Fragment = string.Empty };
-            return builder.Uri;
+            return StremioAddonSecurity.BuildResourceUri(manifestUrl, resource, type, id, extra);
         }
         private static bool SameAddonUrl(string? left, string? right)
         {

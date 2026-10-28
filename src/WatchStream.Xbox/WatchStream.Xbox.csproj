@@ -12,17 +12,21 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <PackageCertificateKeyFile>WatchStream.Xbox_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+    <!-- Release signing and installer generation are opt-in; supply the real publisher identity and HTTPS host in a protected release pipeline. -->
+    <AppxPackageSigningEnabled Condition="'$(WatchStreamReleaseSigningEnabled)' == 'true'">true</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled Condition="'$(WatchStreamReleaseSigningEnabled)' != 'true'">false</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile Condition="'$(WatchStreamReleaseInstallerEnabled)' == 'true'">true</GenerateAppInstallerFile>
+    <GenerateAppInstallerFile Condition="'$(WatchStreamReleaseInstallerEnabled)' != 'true'">false</GenerateAppInstallerFile>
+    <PackageCertificateKeyFile Condition="'$(WatchStreamSigningCertificate)' != ''">$(WatchStreamSigningCertificate)</PackageCertificateKeyFile>
+    <AppInstallerUri Condition="'$(WatchStreamReleaseInstallerUri)' != ''">$(WatchStreamReleaseInstallerUri)</AppInstallerUri>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>False</GenerateTestArtifacts>
     <AppxBundle>Auto</AppxBundle>
-    <AppInstallerUri>https://192.168.1.104:11443/#Home</AppInstallerUri>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <DefineConstants Condition="'$(WatchStreamAddonDirectoryPermissionGranted)' == 'true'">$(DefineConstants);WATCHSTREAM_ADDON_DIRECTORY_PERMISSION_GRANTED</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WatchStream.Core\WatchStream.Core.csproj" />

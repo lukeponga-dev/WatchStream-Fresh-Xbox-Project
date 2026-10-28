@@ -2,7 +2,6 @@ name: Verify WatchStream
 
 on:
   push:
-    branches: [ main ]
   pull_request:
   workflow_dispatch:
 
@@ -49,6 +48,10 @@ jobs:
         shell: pwsh
         run: |
           & "$env:WATCHSTREAM_MSBUILD" WatchStream.slnx /restore /t:Build /p:Configuration=Debug /p:Platform=x64 /p:AppxPackageSigningEnabled=false /p:GenerateAppInstallerFile=false /p:PublishAot=false /m:1
+
+      - name: Run automated tests
+        shell: pwsh
+        run: dotnet test tests/WatchStream.Tests/WatchStream.Tests.csproj --configuration Debug --logger "console;verbosity=normal"
 
   stremio-public-contracts:
     name: Validate live public Stremio add-on responses

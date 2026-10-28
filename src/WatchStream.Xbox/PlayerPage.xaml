@@ -14,7 +14,7 @@
                             VerticalAlignment="Stretch"/>
 
         <!-- Explicit exit control complements Xbox B/Back and returns to the previous logical page. -->
-        <Button Content="â€¹  BACK" HorizontalAlignment="Left" VerticalAlignment="Top"
+        <Button Content="BACK" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Margin="32,28,0,0" Padding="20,12" MinWidth="112" MinHeight="48"
                 Background="#CC121824" Foreground="White" BorderThickness="0"
                 Click="PlayerBack_Click" />
