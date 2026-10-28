@@ -3,12 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace WatchStream.Xbox.Services
 {
+    public sealed class AddonResource
+    {
+        public string Name { get; set; } = string.Empty;
+        public List<string> Types { get; set; } = new List<string>();
+        public List<string> IdPrefixes { get; set; } = new List<string>();
+    }
+    public sealed class CatalogExtra
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsRequired { get; set; }
+        public List<string> Options { get; set; } = new List<string>();
+        public int OptionsLimit { get; set; } = 1;
+    }
+    public sealed class AddonCatalog
+    {
+        public string Type { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public List<CatalogExtra> Extra { get; set; } = new List<CatalogExtra>();
+    }
     public sealed class InstalledAddon
     {
         public string Id { get; set; } = string.Empty;
@@ -16,11 +37,20 @@ namespace WatchStream.Xbox.Services
         public string Description { get; set; } = string.Empty;
         public string ManifestUrl { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
-        public bool SupportsStreams { get; set; }
-        public bool SupportsCatalogs { get; set; }
-        public string Capabilities => (SupportsCatalogs ? "Catalogs" : "No catalogs") + "  •  " + (SupportsStreams ? "Streams" : "No streams");
+        public List<string> Types { get; set; } = new List<string>();
+        public List<string> IdPrefixes { get; set; } = new List<string>();
+        public List<AddonResource> Resources { get; set; } = new List<AddonResource>();
+        public List<AddonCatalog> Catalogs { get; set; } = new List<AddonCatalog>();
+        public bool SupportsStreams => Resources.Any(x => string.Equals(x.Name, "stream", StringComparison.OrdinalIgnoreCase));
+        public bool SupportsCatalogs => Resources.Any(x => string.Equals(x.Name, "catalog", StringComparison.OrdinalIgnoreCase)) && Catalogs.Count > 0;
+        public string Capabilities => (SupportsCatalogs ? "Catalogs" : "No catalogs") + " · " + (SupportsStreams ? "Streams" : "No streams");
+        public bool SupportsResource(string name, string type, string? id)
+        {
+            return Resources.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase) &&
+                (x.Types.Count == 0 ? Types.Count == 0 || Types.Contains(type, StringComparer.OrdinalIgnoreCase) : x.Types.Contains(type, StringComparer.OrdinalIgnoreCase)) &&
+                (x.IdPrefixes.Count == 0 ? IdPrefixes.Count == 0 || id == null || IdPrefixes.Any(prefix => id.StartsWith(prefix, StringComparison.Ordinal)) : id != null && x.IdPrefixes.Any(prefix => id.StartsWith(prefix, StringComparison.Ordinal))));
+        }
     }
-
     public sealed class StreamSource
     {
         public string Name { get; set; } = "Stream";
@@ -43,7 +73,7 @@ namespace WatchStream.Xbox.Services
             if (string.IsNullOrWhiteSpace(raw)) return Array.Empty<InstalledAddon>();
             try
             {
-                return JsonSerializer.Deserialize<List<InstalledAddon>>(raw) ?? new List<InstalledAddon>();
+                return JsonSerializer.Deserialize<List<InstalledAddon>>(raw, WatchStreamJson.Options) ?? new List<InstalledAddon>();
             }
             catch { return Array.Empty<InstalledAddon>(); }
         }
@@ -69,29 +99,42 @@ namespace WatchStream.Xbox.Services
                     var name = GetString(root, "name");
                     if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
                         throw new InvalidOperationException("This manifest is missing the required id or name fields.");
-                    var resources = new List<string>();
+                    var addonTypes = ReadStringArray(root, "types");
+                    var addonPrefixes = ReadStringArray(root, "idPrefixes");
+                    var resources = new List<AddonResource>();
                     if (root.TryGetProperty("resources", out var resourceArray) && resourceArray.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var resource in resourceArray.EnumerateArray())
                         {
-                            if (resource.ValueKind == JsonValueKind.String) resources.Add(resource.GetString() ?? string.Empty);
-                            else if (resource.ValueKind == JsonValueKind.Object && resource.TryGetProperty("name", out var resourceName))
-                                resources.Add(resourceName.GetString() ?? string.Empty);
+                            var resourceName = resource.ValueKind == JsonValueKind.String ? resource.GetString() : GetString(resource, "name");
+                            if (string.IsNullOrWhiteSpace(resourceName)) continue;
+                            resources.Add(new AddonResource { Name = resourceName,
+                                Types = resource.ValueKind == JsonValueKind.Object ? ReadStringArray(resource, "types") : new List<string>(),
+                                IdPrefixes = resource.ValueKind == JsonValueKind.Object ? ReadStringArray(resource, "idPrefixes") : new List<string>() });
                         }
                     }
-                    var addon = new InstalledAddon
+                    var catalogs = new List<AddonCatalog>();
+                    if (root.TryGetProperty("catalogs", out var catalogArray) && catalogArray.ValueKind == JsonValueKind.Array)
+                    foreach (var catalog in catalogArray.EnumerateArray())
                     {
-                        Id = id,
-                        Name = name,
-                        Description = GetString(root, "description") ?? string.Empty,
-                        ManifestUrl = uri.AbsoluteUri,
-                        Version = GetString(root, "version") ?? string.Empty,
-                        SupportsStreams = resources.Contains("stream", StringComparer.OrdinalIgnoreCase),
-                        SupportsCatalogs = resources.Contains("catalog", StringComparer.OrdinalIgnoreCase)
-                    };
+                        var catalogId = GetString(catalog, "id"); var catalogType = GetString(catalog, "type");
+                        if (string.IsNullOrWhiteSpace(catalogId) || string.IsNullOrWhiteSpace(catalogType)) continue;
+                        var extras = new List<CatalogExtra>();
+                        if (catalog.TryGetProperty("extra", out var extraArray) && extraArray.ValueKind == JsonValueKind.Array)
+                        foreach (var extra in extraArray.EnumerateArray())
+                        {
+                            var extraName = GetString(extra, "name"); if (string.IsNullOrWhiteSpace(extraName)) continue;
+                            extras.Add(new CatalogExtra { Name = extraName, IsRequired = extra.TryGetProperty("isRequired", out var required) && required.ValueKind == JsonValueKind.True,
+                                Options = ReadStringArray(extra, "options"), OptionsLimit = extra.TryGetProperty("optionsLimit", out var limit) && limit.TryGetInt32(out var count) ? count : 1 });
+                        }
+                        catalogs.Add(new AddonCatalog { Id = catalogId, Type = catalogType, Name = GetString(catalog, "name") ?? catalogId, Extra = extras });
+                    }
+                    var addon = new InstalledAddon { Id = id, Name = name, Description = GetString(root, "description") ?? string.Empty,
+                        ManifestUrl = uri.AbsoluteUri, Version = GetString(root, "version") ?? string.Empty, Types = addonTypes,
+                        IdPrefixes = addonPrefixes, Resources = resources, Catalogs = catalogs };
                     var installed = GetInstalled().Where(x => !string.Equals(x.ManifestUrl, addon.ManifestUrl, StringComparison.OrdinalIgnoreCase)).ToList();
                     installed.Add(addon);
-                    ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed);
+                    ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed, WatchStreamJson.Options);
                     return addon;
                 }
             }
@@ -111,7 +154,7 @@ namespace WatchStream.Xbox.Services
                 throw new InvalidOperationException("Connect your Stremio account before syncing its add-ons.");
 
             // APIRequest is internally tagged in stremio-core; the method name is part of the JSON contract.
-            var body = JsonSerializer.Serialize(new { type = "AddonCollectionGet", authKey, update = true, addFromURL = Array.Empty<string>() });
+            var body = JsonSerializer.Serialize(new { type = "AddonCollectionGet", authKey, update = true, addFromURL = Array.Empty<string>() }, WatchStreamJson.Options);
             using (var request = new HttpRequestMessage(HttpMethod.Post, "https://api.strem.io/api/addonCollectionGet"))
             {
                 request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
@@ -157,7 +200,7 @@ namespace WatchStream.Xbox.Services
         public void Remove(string manifestUrl)
         {
             var installed = GetInstalled().Where(x => !string.Equals(x.ManifestUrl, manifestUrl, StringComparison.OrdinalIgnoreCase)).ToList();
-            ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed);
+            ApplicationData.Current.LocalSettings.Values[SettingsKey] = JsonSerializer.Serialize(installed, WatchStreamJson.Options);
         }
 
         public async Task<IReadOnlyList<StreamSource>> ResolveStreamsAsync(string type, string itemId, CancellationToken cancellationToken)
@@ -166,21 +209,12 @@ namespace WatchStream.Xbox.Services
                 throw new ArgumentException("A content type and item ID are required.");
 
             var streamTasks = GetInstalled()
-                .Where(x => x.SupportsStreams)
+                .Where(x => x.SupportsResource("stream", type, itemId))
                 .Select(async addon =>
                 {
                     try
                     {
-                        var manifest = new Uri(addon.ManifestUrl);
-                        var baseBuilder = new UriBuilder(manifest)
-                        {
-                            Path = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length),
-                            Query = string.Empty,
-                            Fragment = string.Empty
-                        };
-                        var baseUri = baseBuilder.Uri;
-                        var streamUrl = new Uri(baseUri, "stream/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(itemId) + ".json");
-
+                        var streamUrl = BuildResourceUri(addon.ManifestUrl, "stream", type, itemId, null);
                         using var response = await Http.GetAsync(streamUrl, cancellationToken);
                         if (!response.IsSuccessStatusCode) return Enumerable.Empty<StreamSource>();
 
@@ -221,6 +255,53 @@ namespace WatchStream.Xbox.Services
             return results.SelectMany(x => x).ToList();
         }
 
+        public async Task<string> RequestCatalogAsync(InstalledAddon addon, AddonCatalog catalog, IDictionary<string, string>? extra, CancellationToken cancellationToken)
+        {
+            if (addon == null || catalog == null) throw new ArgumentNullException(addon == null ? nameof(addon) : nameof(catalog));
+            if (!addon.SupportsResource("catalog", catalog.Type, null)) throw new InvalidOperationException("This add-on does not declare the requested catalog resource.");
+            var supplied = extra ?? new Dictionary<string, string>();
+            foreach (var required in catalog.Extra.Where(x => x.IsRequired))
+                if (!supplied.TryGetValue(required.Name, out var value) || string.IsNullOrWhiteSpace(value)) throw new InvalidOperationException("Catalog requires the extra parameter: " + required.Name);
+            using var response = await Http.GetAsync(BuildResourceUri(addon.ManifestUrl, "catalog", catalog.Type, catalog.Id, supplied), cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string?> RequestMetadataAsync(string type, string itemId, CancellationToken cancellationToken)
+        {
+            foreach (var addon in GetInstalled().Where(x => x.SupportsResource("meta", type, itemId)))
+            {
+                try
+                {
+                    using var response = await Http.GetAsync(BuildResourceUri(addon.ManifestUrl, "meta", type, itemId, null), cancellationToken);
+                    if (!response.IsSuccessStatusCode) continue;
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("meta", out var meta) && meta.ValueKind == JsonValueKind.Object) return meta.GetRawText();
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { /* Try the next compatible metadata provider. */ }
+            }
+            return null;
+        }
+
+        public static Uri BuildResourceUri(string manifestUrl, string resource, string type, string id, IDictionary<string, string>? extra)
+        {
+            var manifest = new Uri(manifestUrl);
+            var basePath = manifest.AbsolutePath.Substring(0, manifest.AbsolutePath.Length - "manifest.json".Length);
+            var route = resource.TrimEnd('/') + "/" + Uri.EscapeDataString(type) + "/" + Uri.EscapeDataString(id);
+            if (extra != null && extra.Count > 0)
+                route += "/" + string.Join("&", extra.Select(x => Uri.EscapeDataString(x.Key) + "=" + Uri.EscapeDataString(x.Value)));
+            var builder = new UriBuilder(manifest) { Path = basePath + route + ".json", Query = manifest.Query.TrimStart('?') , Fragment = string.Empty };
+            return builder.Uri;
+        }
+        private static List<string> ReadStringArray(JsonElement element, string property)
+        {
+            var values = new List<string>();
+            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var array) && array.ValueKind == JsonValueKind.Array)
+                foreach (var value in array.EnumerateArray()) if (value.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(value.GetString())) values.Add(value.GetString()!);
+            return values;
+        }
         private static string? GetString(JsonElement element, string property)
         {
             return element.ValueKind == JsonValueKind.Object &&

@@ -8,27 +8,57 @@
     Loaded="AccountPage_Loaded">
     <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
         <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <local:NavigationSidebar Grid.Column="0" CurrentSection="Connect"/>
-        <Grid Grid.Column="1" Padding="40">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="720" Spacing="22">
-            <TextBlock Text="Connect Stremio" FontSize="42" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="Sign in to Stremio with Facebook or your usual Stremio method, then approve this Xbox device link." FontSize="18" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"/>
-            <Border Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="18" Padding="28">
-                <StackPanel Spacing="18" HorizontalAlignment="Center">
-                    <TextBlock Text="1. Open the official Stremio page.  2. Choose Facebook sign-in (if offered) and authenticate.  3. Approve the device link. WatchStream will finish connecting automatically." FontSize="16" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
-                    <Border Background="#05080F" BorderBrush="#39D6C5" BorderThickness="2" CornerRadius="12" Padding="18,12">
-                        <TextBlock x:Name="PairingCodeText" Text="CONNECTING…" FontSize="44" FontWeight="Bold" CharacterSpacing="180" HorizontalAlignment="Center"/>
-                    </Border>
-                    <Border x:Name="QrCodeBorder" Width="190" Height="190" Background="White" CornerRadius="8" Padding="4" Visibility="Collapsed">
-                        <WebView x:Name="PairingQrView" IsHitTestVisible="False" />
-                    </Border>
-                    <Button x:Name="PairingLinkButton" Content="Continue to Stremio sign-in / pairing" Click="PairingLinkButton_Click" MinHeight="48" Padding="20,8" Background="#5268FF" Foreground="White" FontSize="16"/>
-                    <TextBlock x:Name="StatusText" Text="Contacting Stremio…" FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520"/>
-                    <Button x:Name="RefreshButton" Content="Generate a new code" Click="RefreshButton_Click" MinHeight="44" Padding="18,8" Background="#142545" Foreground="White"/>
-                </StackPanel>
-            </Border>
-            <Button Content="Back to Home" Click="BackButton_Click" HorizontalAlignment="Center" Padding="24,12" MinHeight="44" Background="#142545" Foreground="White" FontSize="16"/>
-        </StackPanel>
+        <local:NavigationSidebar Grid.Column="0" CurrentSection="Sign in"/>
+        <Grid Grid.Column="1" Padding="34,26">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Spacing="5" Margin="4,0,0,20">
+                <TextBlock Text="SIGN IN" FontSize="11" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="180"/>
+                <TextBlock Text="Your WatchStream starts here" FontSize="34" FontWeight="Bold"/>
+                <TextBlock Text="Connect your Stremio account to sync your library and add-ons." FontSize="15" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Grid Grid.Row="1" ColumnSpacing="24" VerticalAlignment="Center" MaxWidth="1120" HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*"/><ColumnDefinition Width="0.95*"/></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Background="#09162D" BorderBrush="#1A3155" BorderThickness="1" CornerRadius="20" Padding="28">
+                    <StackPanel Spacing="20" VerticalAlignment="Center">
+                        <Border Width="58" Height="58" CornerRadius="16" Background="#102C40" HorizontalAlignment="Left">
+                            <TextBlock Text="?" FontSize="27" Foreground="#39D6C5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="One account. Your whole library." FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="Sign in securely using Stremio's official Facebook flow, or link your account from a phone or computer." FontSize="15" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Border Height="1" Background="#1A3155"/>
+                        <StackPanel Spacing="13">
+                            <TextBlock Text="SECURE ACCOUNT LINKING" FontSize="10" FontWeight="Bold" Foreground="#7186AA" CharacterSpacing="120"/>
+                            <TextBlock Text="1. Open the Stremio pairing page.
+2. Sign in and approve this device.
+3. WatchStream connects automatically when approval is confirmed." FontSize="14" Foreground="#D4DDF0" TextWrapping="Wrap" LineHeight="24"/>
+                        </StackPanel>
+                        <TextBlock Text="Your password is never requested or stored by WatchStream." FontSize="12" Foreground="#7186AA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="#0B1830" BorderBrush="#263D62" BorderThickness="1" CornerRadius="20" Padding="24">
+                    <StackPanel Spacing="15" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <TextBlock Text="Connect your account" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="Choose how you want to sign in." FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap"/>
+                        <Button x:Name="FacebookButton" Content="Continue with Facebook" Click="FacebookButton_Click" MinHeight="52" Background="#1877F2" Foreground="White" FontSize="16" FontWeight="SemiBold" HorizontalContentAlignment="Center"/>
+                        <Grid ColumnSpacing="10" VerticalAlignment="Center"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Grid.Column="0" Height="1" Background="#263D62"/><TextBlock Grid.Column="1" Text="OR LINK WITH A CODE" FontSize="10" Foreground="#7186AA" CharacterSpacing="55" VerticalAlignment="Center"/><Border Grid.Column="2" Height="1" Background="#263D62"/></Grid>
+                        <Border Background="#061022" BorderBrush="#39D6C5" BorderThickness="1.5" CornerRadius="12" Padding="12">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="YOUR DEVICE CODE" FontSize="10" FontWeight="Bold" Foreground="#7186AA" CharacterSpacing="100" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="PairingCodeText" Text="CONNECTING..." FontSize="31" FontWeight="Bold" CharacterSpacing="120" HorizontalAlignment="Center" Foreground="#39D6C5"/>
+                                <Border x:Name="QrCodeBorder" Width="164" Height="164" Background="White" CornerRadius="8" Padding="4" HorizontalAlignment="Center" Visibility="Collapsed">
+                                    <WebView x:Name="PairingQrView" IsHitTestVisible="False"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                        <Button x:Name="PairingLinkButton" Content="Open Stremio pairing" Click="PairingLinkButton_Click" MinHeight="48" Background="#5268FF" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                        <Button x:Name="RefreshButton" Content="Generate a new code" Click="RefreshButton_Click" MinHeight="42" Background="#142545" Foreground="#EAF0FF" FontSize="14"/>
+                        <TextBlock x:Name="StatusText" Text="Getting a secure code from Stremio..." FontSize="12" Foreground="#A9B5D1" TextWrapping="Wrap" TextAlignment="Center"/>
+                        <Button Content="Back to Home" Click="BackButton_Click" MinHeight="40" Background="Transparent" Foreground="#A9B5D1" BorderBrush="#263D62" BorderThickness="1"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

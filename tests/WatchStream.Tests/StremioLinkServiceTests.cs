@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Xunit;
 using WatchStream.Core.Contracts;
 using WatchStream.Xbox.Services;
@@ -73,6 +74,43 @@ public sealed class StremioLinkServiceTests
         var service = new StremioLinkService(store, client);
 
         await Assert.ThrowsAsync<StremioLinkException>(() => service.TryCompleteLinkAsync("A1B2", CancellationToken.None));
+        Assert.Null(store.Session);
+    }
+
+    [Fact]
+    public async Task CompleteFacebookSignInAsync_PersistsAccountKeyFromAuthWithFacebook()
+    {
+        var handler = new StubHandler(_ => Json(HttpStatusCode.OK,
+            "{\"result\":{\"authKey\":\"account-session-key\",\"user\":{}}}"));
+        using var client = new HttpClient(handler);
+        var store = new FakeSessionStore();
+        var service = new StremioLinkService(store, client);
+
+        var completed = await service.CompleteFacebookSignInAsync("user@example.com", "fb-login-token", CancellationToken.None);
+
+        Assert.True(completed);
+        Assert.Equal("account-session-key", store.Session);
+        var request = handler.Requests.Single();
+        Assert.Equal("https://api.strem.io/api/login", request.RequestUri!.AbsoluteUri);
+        Assert.Equal(HttpMethod.Post, request.Method);
+        using var body = JsonDocument.Parse(handler.Bodies.Single());
+        Assert.Equal("Login", body.RootElement.GetProperty("type").GetString());
+        Assert.Equal("user@example.com", body.RootElement.GetProperty("email").GetString());
+        Assert.Equal("fb-login-token", body.RootElement.GetProperty("password").GetString());
+        Assert.True(body.RootElement.GetProperty("facebook").GetBoolean());
+    }
+
+    [Fact]
+    public async Task CompleteFacebookSignInAsync_RejectsApiErrorWithoutPersisting()
+    {
+        var handler = new StubHandler(_ => Json(HttpStatusCode.OK,
+            "{\"error\":{\"code\":1,\"message\":\"rejected\"}}"));
+        using var client = new HttpClient(handler);
+        var store = new FakeSessionStore();
+        var service = new StremioLinkService(store, client);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.CompleteFacebookSignInAsync("user@example.com", "fb-login-token", CancellationToken.None));
         Assert.Null(store.Session);
     }
 

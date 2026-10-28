@@ -1,12 +1,20 @@
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using WatchStream.Core.Contracts;
 
 namespace WatchStream.Xbox.Services
 {
+    internal static class WatchStreamJson
+    {
+        internal static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+        { TypeInfoResolver = new DefaultJsonTypeInfoResolver() };
+    }
+
     /// <summary>
     /// Implements Stremio Core's account-link contract. The link Read response returns
     /// the account auth key directly once the user approves the pairing; that key is
@@ -15,6 +23,7 @@ namespace WatchStream.Xbox.Services
     public sealed class StremioLinkService
     {
         private const string LinkApiBase = "https://link.stremio.com/api/v2/";
+        private const string AccountApiBase = "https://api.strem.io/api/";
         private readonly HttpClient _httpClient;
         private readonly ISessionStore _sessionStore;
 
@@ -83,6 +92,44 @@ namespace WatchStream.Xbox.Services
 
                     await _sessionStore.WriteSessionAsync(authKey, cancellationToken);
                     return true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Completes the official Stremio Web Facebook flow using its returned account
+        /// email and fbLoginToken, then persists the returned account auth key.
+        /// </summary>
+        public async Task<bool> CompleteFacebookSignInAsync(string email, string facebookLoginToken, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("A Facebook account email is required.", nameof(email));
+            if (string.IsNullOrWhiteSpace(facebookLoginToken))
+                throw new ArgumentException("Stremio did not return the Facebook login credential.", nameof(facebookLoginToken));
+
+            // Stremio Web's official flow obtains email + fbLoginToken from
+            // /login-fb-get-acc/{state}, then authenticates via AuthRequest::Login
+            // with facebook=true. Do not send the Facebook access token to this API.
+            var body = JsonSerializer.Serialize(new { type = "Login", email, password = facebookLoginToken, facebook = true }, WatchStreamJson.Options);
+            using (var request = new HttpRequestMessage(HttpMethod.Post, AccountApiBase + "login"))
+            {
+                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                using (var response = await _httpClient.SendAsync(request, cancellationToken))
+                {
+                    var text = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException("Stremio couldn't finish Facebook sign-in. Check your connection and try again.");
+
+                    using (var document = JsonDocument.Parse(text))
+                    {
+                        var root = document.RootElement;
+                        if (HasApiError(root) || !TryGetResult(root, out var result) ||
+                            !TryReadString(result, "authKey", out var authKey))
+                            throw new InvalidOperationException("Stremio rejected the Facebook sign-in. Please try again.");
+
+                        await _sessionStore.WriteSessionAsync(authKey, cancellationToken);
+                        return true;
+                    }
                 }
             }
         }

@@ -27,7 +27,7 @@ namespace WatchStream.Xbox
 
         private async void TestServerButton_Click(object sender, RoutedEventArgs e)
         {
-            ServerStatusText.Text = "Checking Stremio Server heartbeat…";
+            ServerStatusText.Text = "Checking Stremio Server heartbeatâ€¦";
             try
             {
                 var message = await _serverService.CheckConnectionAsync(ServerUrlBox.Text, CancellationToken.None);

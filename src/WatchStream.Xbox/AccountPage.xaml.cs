@@ -1,6 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text.Json;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -16,6 +19,7 @@ namespace WatchStream.Xbox
         private StremioLinkCode? _currentLink;
         private bool _creatingLink;
         private bool _pairingPageOpened;
+        private static readonly HttpClient FacebookHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
 
         public AccountPage()
         {
@@ -26,6 +30,93 @@ namespace WatchStream.Xbox
         {
             if (_currentLink == null && !_creatingLink)
                 await CreateLinkAsync();
+        }
+
+        private async void FacebookButton_Click(object sender, RoutedEventArgs e)
+        {
+            FacebookButton.IsEnabled = false;
+            _pollingCancellation?.Cancel();
+            StatusText.Text = "Opening Stremio Facebook sign-in...";
+            try
+            {
+                var credentials = await AcquireFacebookCredentialsAsync(CancellationToken.None);
+                StatusText.Text = "Finishing sign-in with Stremio...";
+                _linkService ??= new StremioLinkService(_sessionStore);
+                if (await _linkService.CompleteFacebookSignInAsync(credentials.Email, credentials.Password, CancellationToken.None))
+                {
+                    StatusText.Text = "Signed in with Facebook. Loading WatchStream...";
+                    Frame?.Navigate(typeof(MainPage));
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                StatusText.Text = ex.Message;
+            }
+            finally
+            {
+                FacebookButton.IsEnabled = true;
+            }
+        }
+
+        private sealed class FacebookCredentials
+        {
+            public string Email { get; init; } = string.Empty;
+            public string Password { get; init; } = string.Empty;
+        }
+
+        /// <summary>
+        /// Mirrors Stremio Web's official useFacebookLogin flow. Stremio hosts the
+        /// Facebook OAuth integration; the Xbox client never needs its own Meta App ID.
+        /// </summary>
+        private static async Task<FacebookCredentials> AcquireFacebookCredentialsAsync(CancellationToken cancellationToken)
+        {
+            var stateBytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(stateBytes);
+            var state = BitConverter.ToString(stateBytes).Replace("-", string.Empty).ToLowerInvariant();
+            var loginUri = new Uri("https://www.strem.io/login-fb/" + Uri.EscapeDataString(state));
+            if (!await Launcher.LaunchUriAsync(loginUri))
+                throw new InvalidOperationException("Couldn't open Stremio's Facebook sign-in page.");
+
+            const int maxTries = 25;
+            for (var attempt = 0; attempt < maxTries; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    using (var response = await FacebookHttpClient.GetAsync(
+                        "https://www.strem.io/login-fb-get-acc/" + Uri.EscapeDataString(state), cancellationToken))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            using (var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                            {
+                                if (document.RootElement.TryGetProperty("user", out var user) &&
+                                    user.ValueKind == JsonValueKind.Object &&
+                                    TryReadJsonString(user, "email", out var email) &&
+                                    TryReadJsonString(user, "fbLoginToken", out var password))
+                                    return new FacebookCredentials { Email = email, Password = password };
+                            }
+                        }
+                    }
+                }
+                catch (HttpRequestException) { /* transient network issue; retry like Stremio Web */ }
+                catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested) { /* request timeout; retry */ }
+
+                if (attempt < maxTries - 1)
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
+
+            throw new InvalidOperationException("Facebook sign-in wasn't completed in time. Return to WatchStream and try again.");
+        }
+
+        private static bool TryReadJsonString(JsonElement element, string property, out string value)
+        {
+            value = string.Empty;
+            if (!element.TryGetProperty(property, out var candidate) || candidate.ValueKind != JsonValueKind.String)
+                return false;
+            value = candidate.GetString() ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(value);
         }
 
         private async Task CreateLinkAsync()

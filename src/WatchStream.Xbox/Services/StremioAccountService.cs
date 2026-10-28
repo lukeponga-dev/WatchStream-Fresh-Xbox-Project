@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using WatchStream.Core.Contracts;
@@ -30,8 +31,8 @@ namespace WatchStream.Xbox.Services
 
             // Matches stremio-core's serialized APIRequest::Auth(AuthRequest::Login).
             // The duplicate type keys reflect the current Rust serialization contract.
-            var safeEmail = JsonSerializer.Serialize(email.Trim());
-            var safePassword = JsonSerializer.Serialize(password);
+            var safeEmail = JsonSerializer.Serialize(email.Trim(), WatchStreamJson.Options);
+            var safePassword = JsonSerializer.Serialize(password, WatchStreamJson.Options);
             var body = "{\"type\":\"Auth\",\"type\":\"Login\",\"email\":" + safeEmail +
                        ",\"password\":" + safePassword + ",\"facebook\":false}";
             using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "login"))
@@ -63,7 +64,7 @@ namespace WatchStream.Xbox.Services
             var authKey = await _sessionStore.ReadSessionAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(authKey)) return AccountSessionState.SignedOut;
 
-            var body = "{\"type\":\"GetUser\",\"authKey\":" + JsonSerializer.Serialize(authKey) + "}";
+            var body = "{\"type\":\"GetUser\",\"authKey\":" + JsonSerializer.Serialize(authKey, WatchStreamJson.Options) + "}";
             using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "getUser"))
             {
                 request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -96,7 +97,7 @@ namespace WatchStream.Xbox.Services
             {
                 if (!string.IsNullOrWhiteSpace(authKey))
                 {
-                    var body = "{\"type\":\"Logout\",\"authKey\":" + JsonSerializer.Serialize(authKey) + "}";
+                    var body = "{\"type\":\"Logout\",\"authKey\":" + JsonSerializer.Serialize(authKey, WatchStreamJson.Options) + "}";
                     using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "logout"))
                     {
                         request.Content = new StringContent(body, Encoding.UTF8, "application/json");

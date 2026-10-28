@@ -72,27 +72,19 @@ namespace WatchStream.Xbox.Services
 
                     foreach (var catalog in catalogs.EnumerateArray())
                     {
-                        if (!string.Equals(ReadString(catalog, "type"), mediaType, StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(ReadString(catalog, "type"), mediaType, StringComparison.OrdinalIgnoreCase) || !SupportsManifestResource(manifest.RootElement, "catalog", mediaType, null))
                             continue;
                         var id = ReadString(catalog, "id");
                         if (string.IsNullOrWhiteSpace(id)) continue;
 
-                        var supportsSearch = false;
-                        if (catalog.TryGetProperty("extra", out var extras) && extras.ValueKind == JsonValueKind.Array)
-                            supportsSearch = extras.EnumerateArray().Any(x => string.Equals(ReadString(x, "name"), "search", StringComparison.OrdinalIgnoreCase));
-
-                        var manifestUri = new Uri(source.ManifestUrl);
-                        var baseUri = new UriBuilder(manifestUri)
-                        {
-                            Path = manifestUri.AbsolutePath.Substring(0, manifestUri.AbsolutePath.Length - "manifest.json".Length),
-                            Query = "",
-                            Fragment = ""
-                        }.Uri;
-                        var catalogUri = new Uri(baseUri, "catalog/" + Uri.EscapeDataString(mediaType) + "/" + Uri.EscapeDataString(id) + ".json");
-                        if (!string.IsNullOrWhiteSpace(searchQuery) && supportsSearch)
-                            catalogUri = new Uri(catalogUri.AbsoluteUri + "?search=" + Uri.EscapeDataString(searchQuery.Trim()));
-
-                        using var response = await _http.GetAsync(catalogUri, cancellationToken);
+                        var extras = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        var extraDefinitions = catalog.TryGetProperty("extra", out var definitions) && definitions.ValueKind == JsonValueKind.Array
+                            ? definitions.EnumerateArray().ToList() : new List<JsonElement>();
+                        if (!string.IsNullOrWhiteSpace(searchQuery) && extraDefinitions.Any(x => string.Equals(ReadString(x, "name"), "search", StringComparison.OrdinalIgnoreCase)))
+                            extras["search"] = searchQuery.Trim();
+                        if (extraDefinitions.Any(x => x.TryGetProperty("isRequired", out var required) && required.ValueKind == JsonValueKind.True &&
+                            (!extras.TryGetValue(ReadString(x, "name") ?? string.Empty, out var supplied) || string.IsNullOrWhiteSpace(supplied)))) continue;
+                        var catalogUri = StremioAddonService.BuildResourceUri(source.ManifestUrl, "catalog", mediaType, id, extras);                        using var response = await _http.GetAsync(catalogUri, cancellationToken);
                         if (!response.IsSuccessStatusCode) { failures++; continue; }
                         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                         if (!doc.RootElement.TryGetProperty("metas", out var metas) || metas.ValueKind != JsonValueKind.Array)
@@ -114,6 +106,27 @@ namespace WatchStream.Xbox.Services
             return unique;
         }
 
+        private static bool SupportsManifestResource(JsonElement manifest, string name, string type, string? id)
+        {
+            if (!manifest.TryGetProperty("resources", out var resources) || resources.ValueKind != JsonValueKind.Array) return false;
+            var manifestTypes = manifest.TryGetProperty("types", out var types) && types.ValueKind == JsonValueKind.Array
+                ? types.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToList() : new List<string>();
+            var prefixes = manifest.TryGetProperty("idPrefixes", out var ids) && ids.ValueKind == JsonValueKind.Array
+                ? ids.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToList() : new List<string>();
+            foreach (var resource in resources.EnumerateArray())
+            {
+                var resourceName = resource.ValueKind == JsonValueKind.String ? resource.GetString() : ReadString(resource, "name");
+                if (!string.Equals(resourceName, name, StringComparison.OrdinalIgnoreCase)) continue;
+                var resourceTypes = resource.ValueKind == JsonValueKind.Object && resource.TryGetProperty("types", out var rt) && rt.ValueKind == JsonValueKind.Array
+                    ? rt.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToList() : manifestTypes;
+                var resourcePrefixes = resource.ValueKind == JsonValueKind.Object && resource.TryGetProperty("idPrefixes", out var rp) && rp.ValueKind == JsonValueKind.Array
+                    ? rp.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToList() : prefixes;
+                if (resourceTypes.Count > 0 && !resourceTypes.Contains(type, StringComparer.OrdinalIgnoreCase)) continue;
+                if (name != "catalog" && resourcePrefixes.Count > 0 && (id == null || !resourcePrefixes.Any(prefix => id.StartsWith(prefix, StringComparison.Ordinal)))) continue;
+                return true;
+            }
+            return false;
+        }
         private static void CollectItems(JsonElement value, List<MediaItem> output)
         {
             if (value.ValueKind == JsonValueKind.Array)

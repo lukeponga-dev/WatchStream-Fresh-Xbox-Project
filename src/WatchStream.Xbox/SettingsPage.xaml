@@ -8,24 +8,24 @@
         <Border Grid.Column="0" Background="#07142A" BorderBrush="#183B70" BorderThickness="1" Padding="18,20">
             <StackPanel Spacing="8">
                 <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,18">
-                    <Border Width="36" Height="36" CornerRadius="10" Background="#39D6C5"><TextBlock Text="▶" FontSize="20" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                    <Border Width="36" Height="36" CornerRadius="10" Background="#39D6C5"><TextBlock Text="â–¶" FontSize="20" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                     <StackPanel VerticalAlignment="Center" Spacing="1"><TextBlock Text="WATCHSTREAM" FontSize="15" FontWeight="Bold"/><TextBlock Text="SETTINGS" FontSize="9" Foreground="#9BA8C7"/></StackPanel>
                 </StackPanel>
-                <Button Content="⌂   Home" Click="HomeButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="0"/>
-                <Button Content="✦   Discover" Click="DiscoverButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="1"/>
-                <Button Content="▤   Library" Click="LibraryButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="2"/>
-                <Button Content="▣   Series" Click="SeriesButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="3"/>
-                <Button Content="▦   Add-ons" Click="AddonsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="4"/>
-                <Button Content="⌕   Search" Click="SearchButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="5"/>
-                <Button Content="↔   Connect Stremio" Click="ConnectButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="6"/>
-                <Button x:Name="SettingsNavButton" Content="⚙   Settings" Click="SettingsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="7"/>
+                <Button Content="âŒ‚   Home" Click="HomeButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="0"/>
+                <Button Content="âœ¦   Discover" Click="DiscoverButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="1"/>
+                <Button Content="â–¤   Library" Click="LibraryButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="2"/>
+                <Button Content="â–£   Series" Click="SeriesButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="3"/>
+                <Button Content="â–¦   Add-ons" Click="AddonsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="4"/>
+                <Button Content="âŒ•   Search" Click="SearchButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="5"/>
+                <Button Content="â†”   Connect Stremio" Click="ConnectButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#101F3A" Foreground="White" TabIndex="6"/>
+                <Button x:Name="SettingsNavButton" Content="âš™   Settings" Click="SettingsButton_Click" MinHeight="43" HorizontalContentAlignment="Left" Padding="12,0" Background="#5268FF" Foreground="White" TabIndex="7"/>
             </StackPanel>
         </Border>
         <Grid Grid.Column="1" Margin="28,24,28,24" RowSpacing="18">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Spacing="5"><TextBlock Text="Settings" FontSize="36" FontWeight="Bold"/><TextBlock Text="Manage WatchStream preferences and connections." FontSize="16" Foreground="#A9B5D1" TextWrapping="Wrap"/></StackPanel>
             <Border Grid.Row="1" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="14" Padding="20">
-                <StackPanel Spacing="8"><TextBlock Text="Account" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="Connect or manage the Stremio account used by WatchStream." FontSize="15" Foreground="#B7C2DC" TextWrapping="Wrap"/><Button Content="Connect Stremio" Click="ConnectButton_Click" MinWidth="180" MinHeight="48" HorizontalAlignment="Left" Background="#5268FF" Foreground="White" FontSize="16" TabIndex="8"/></StackPanel>
+                <StackPanel Spacing="8"><TextBlock Text="Account" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="Connect or manage the Stremio account used by WatchStream." FontSize="15" Foreground="#B7C2DC" TextWrapping="Wrap"/><Button Content="Sign in" Click="ConnectButton_Click" MinWidth="180" MinHeight="48" HorizontalAlignment="Left" Background="#5268FF" Foreground="White" FontSize="16" TabIndex="8"/></StackPanel>
             </Border>
             <Border Grid.Row="2" Background="#08152E" BorderBrush="#183B70" BorderThickness="1" CornerRadius="14" Padding="20">
                 <StackPanel Spacing="10"><TextBlock Text="Stremio Streaming Server" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="Connect to Stremio Server running on your PC or another device on the same network. Xbox does not host the server itself." FontSize="15" Foreground="#B7C2DC" TextWrapping="Wrap"/><TextBlock Text="Server URL" FontSize="14" Foreground="#B7C2DC"/><TextBox x:Name="ServerUrlBox" PlaceholderText="http://192.168.1.20:11470" MinHeight="48" FontSize="16" TabIndex="9"/><StackPanel Orientation="Horizontal" Spacing="12"><Button Content="Test &amp; Save Server" Click="TestServerButton_Click" MinWidth="190" MinHeight="48" Background="#5268FF" Foreground="White" FontSize="15" TabIndex="10"/><Button Content="Manage add-ons" Click="AddonsButton_Click" MinWidth="160" MinHeight="48" Background="#14294D" Foreground="White" FontSize="15" TabIndex="11"/></StackPanel><TextBlock x:Name="ServerStatusText" Text="Server not checked yet." FontSize="13" Foreground="#9BA8C7" TextWrapping="Wrap"/></StackPanel>

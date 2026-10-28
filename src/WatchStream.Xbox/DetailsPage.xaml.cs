@@ -75,6 +75,20 @@ namespace WatchStream.Xbox
                 PosterImage.Source = null;
 
             StreamsStatusText.Text = "Looking for streams in your installed add-ons…";
+            try
+            {
+                var metadataJson = await _addonService.RequestMetadataAsync(media.Type, media.Id, CancellationToken.None);
+                if (!string.IsNullOrWhiteSpace(metadataJson))
+                {
+                    using var metadata = System.Text.Json.JsonDocument.Parse(metadataJson);
+                    var root = metadata.RootElement;
+                    if (root.TryGetProperty("description", out var description) && description.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(description.GetString())) DescriptionText.Text = description.GetString();
+                    if (root.TryGetProperty("poster", out var poster) && poster.ValueKind == System.Text.Json.JsonValueKind.String && Uri.TryCreate(poster.GetString(), UriKind.Absolute, out var metadataPoster) && (metadataPoster.Scheme == Uri.UriSchemeHttps || metadataPoster.Scheme == Uri.UriSchemeHttp)) PosterImage.Source = new BitmapImage(metadataPoster);
+                    if (root.TryGetProperty("releaseInfo", out var releaseInfo) && releaseInfo.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(releaseInfo.GetString())) YearText.Text = releaseInfo.GetString();
+                }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch { /* Metadata is optional; retain the catalog preview details. */ }
             StreamsList.ItemsSource = null;
 
             try

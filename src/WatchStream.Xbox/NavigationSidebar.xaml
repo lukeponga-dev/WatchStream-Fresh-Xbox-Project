@@ -24,7 +24,7 @@
                 <Button x:Name="SearchButton" Content="⌕   Search" Click="SearchButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Search"/>
                 <Border Height="1" Background="#183B70" Margin="8,12"/>
                 <Button x:Name="AddonsButton" Content="▦   Add-ons" Click="AddonsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Add-ons"/>
-                <Button x:Name="ConnectButton" Content="↔   Connect Stremio" Click="ConnectButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Connect"/>
+                <Button x:Name="ConnectButton" Content="↔   Connect Stremio" Click="ConnectButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Sign in"/>
                 <Button x:Name="SettingsButton" Content="⚙   Settings" Click="SettingsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Settings"/>
             </StackPanel>
             <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#183B70" Margin="0,0,0,7"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/><TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/></StackPanel>
