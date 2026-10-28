@@ -19,6 +19,7 @@ namespace WatchStream.Xbox
         {
             WatchStream.Xbox.Services.PageTransition.PlayEntrance(this);
             _ = LoadHomeCatalogAsync();
+            _ = RefreshAccountPromptAsync();
             HeroPlayButton.Focus(FocusState.Programmatic);
         }
 
@@ -55,6 +56,37 @@ namespace WatchStream.Xbox
                 HeroDesc.Text = "Connect your Stremio account and compatible add-ons to load your catalogs here.";
             }
             finally { _homeCatalogLoading = false; }
+        }
+
+        private async Task RefreshAccountPromptAsync()
+        {
+            try
+            {
+                var profile = await new StremioAccountService(new SecureSessionStore()).GetProfileAsync(CancellationToken.None);
+                if (profile == null)
+                {
+                    AccountPromptTitle.Text = "Your entertainment, all in one place";
+                    AccountPromptDescription.Text = "Connect Stremio to bring your add-ons and library together.";
+                    HomeAccountButton.Content = "SIGN IN";
+                    return;
+                }
+
+                AccountPromptTitle.Text = "Welcome back, " + profile.DisplayName;
+                AccountPromptDescription.Text = "Your Stremio account is connected. Your library and add-ons are ready to explore.";
+                HomeAccountButton.Content = "VIEW PROFILE";
+            }
+            catch (Exception)
+            {
+                // Keep the home screen usable if account verification is temporarily offline.
+            }
+        }
+
+        private void HomeAccountButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.Equals(HomeAccountButton.Content?.ToString(), "VIEW PROFILE", StringComparison.OrdinalIgnoreCase))
+                Frame?.Navigate(typeof(ProfilePage));
+            else
+                Frame?.Navigate(typeof(AccountPage));
         }
 
         public bool TryCloseNavigation() => false;

@@ -100,6 +100,68 @@ namespace WatchStream.Xbox.Services
             ApplicationData.Current.LocalSettings.Values.Remove(SettingsKey);
         }
 
+        public sealed class AddonDirectoryEntry
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
+            public string ManifestUrl { get; set; } = string.Empty;
+            public string PageUrl { get; set; } = string.Empty;
+            public string ConfigureUrl { get; set; } = string.Empty;
+            public int Stars { get; set; }
+            public string Categories { get; set; } = string.Empty;
+            public string PopularityLabel => Stars.ToString("N0") + " stars";
+        }
+
+        /// <summary>Searches the public Stremio Addons community directory. API is experimental and read-only.</summary>
+        public async Task<IReadOnlyList<AddonDirectoryEntry>> SearchDirectoryAsync(string? search, CancellationToken cancellationToken)
+        {
+            var query = "https://stremio-addons.net/api/v0/addons?sort_by=stars&order=desc&limit=25&nsfw=exclude";
+            if (!string.IsNullOrWhiteSpace(search))
+                query += "&search=" + Uri.EscapeDataString(search.Trim());
+
+            using (var response = await Http.GetAsync(query, cancellationToken))
+            {
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException("The Stremio Addons directory is temporarily unavailable.");
+                using (var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync()))
+                {
+                    var root = document.RootElement;
+                    if (!root.TryGetProperty("addons", out var addons) || addons.ValueKind != JsonValueKind.Array)
+                        throw new InvalidOperationException("The directory returned an unexpected response.");
+                    var results = new List<AddonDirectoryEntry>();
+                    foreach (var item in addons.EnumerateArray())
+                    {
+                        var manifest = item.TryGetProperty("manifest", out var value) && value.ValueKind == JsonValueKind.Object
+                            ? value : default;
+                        var name = GetString(manifest, "name");
+                        var manifestUrl = GetString(item, "manifestUrl");
+                        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(manifestUrl))
+                            continue;
+                        var categories = new List<string>();
+                        if (item.TryGetProperty("categories", out var categoryArray) && categoryArray.ValueKind == JsonValueKind.Array)
+                            foreach (var category in categoryArray.EnumerateArray())
+                            {
+                                var categoryName = GetString(category, "name");
+                                if (!string.IsNullOrWhiteSpace(categoryName)) categories.Add(categoryName);
+                            }
+                        var stars = item.TryGetProperty("stars", out var starsElement) && starsElement.TryGetInt32(out var starCount)
+                            ? starCount : 0;
+                        results.Add(new AddonDirectoryEntry
+                        {
+                            Name = name,
+                            Description = GetString(manifest, "description") ?? string.Empty,
+                            ManifestUrl = manifestUrl,
+                            PageUrl = GetString(item, "url") ?? "https://stremio-addons.net/",
+                            ConfigureUrl = GetString(item, "configureUrl") ?? string.Empty,
+                            Stars = stars,
+                            Categories = string.Join(" · ", categories)
+                        });
+                    }
+                    return results;
+                }
+            }
+        }
+
         public async Task<InstalledAddon> InstallAsync(string manifestUrl, CancellationToken cancellationToken)
         {
             if (!Uri.TryCreate(manifestUrl?.Trim(), UriKind.Absolute, out var uri))

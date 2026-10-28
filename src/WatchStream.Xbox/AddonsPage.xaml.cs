@@ -1,9 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using WatchStream.Xbox.Services;
 
@@ -15,9 +17,86 @@ namespace WatchStream.Xbox
 
         public AddonsPage() { InitializeComponent(); }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ReloadInstalled();
+            await LoadDirectoryAsync();
+        }
+
+        private async Task LoadDirectoryAsync()
+        {
+            DirectorySearchButton.IsEnabled = false;
+            DirectoryEmptyText.Text = "Loading community add-ons…";
+            DirectoryEmptyText.Visibility = Visibility.Visible;
+            DirectoryList.Visibility = Visibility.Collapsed;
+            try
+            {
+                var results = await _addonService.SearchDirectoryAsync(DirectorySearchBox.Text, CancellationToken.None);
+                DirectoryList.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<StremioAddonService.AddonDirectoryEntry>(results);
+                DirectoryEmptyText.Text = results.Count == 0
+                    ? "No add-ons matched that search. Try another name or category."
+                    : string.Empty;
+                DirectoryEmptyText.Visibility = results.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                DirectoryList.Visibility = results.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+                StatusText.Text = "Showing " + results.Count + " community add-ons. Select Add to install one on this device.";
+            }
+            catch (Exception ex)
+            {
+                DirectoryEmptyText.Text = "Could not load the community directory. Check your connection and try Search again. " + ex.Message;
+                DirectoryEmptyText.Visibility = Visibility.Visible;
+                DirectoryList.Visibility = Visibility.Collapsed;
+            }
+            finally
+            {
+                DirectorySearchButton.IsEnabled = true;
+            }
+        }
+
+        private async void DirectorySearchButton_Click(object sender, RoutedEventArgs e) => await LoadDirectoryAsync();
+
+        private async void DirectorySearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                e.Handled = true;
+                await LoadDirectoryAsync();
+            }
+        }
+
+        private async void DirectoryInstallButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string manifestUrl)
+                await InstallManifestAsync(manifestUrl);
+        }
+
+        private async Task InstallManifestAsync(string manifestUrl)
+        {
+            InstallButton.IsEnabled = false;
+            DirectorySearchButton.IsEnabled = false;
+            StatusText.Text = "Downloading and validating the selected add-on manifest…";
+            try
+            {
+                var addon = await _addonService.InstallAsync(manifestUrl, CancellationToken.None);
+                ManifestUrlBox.Text = string.Empty;
+                ReloadInstalled();
+                StatusText.Text = "Installed " + addon.Name + " on this device. " +
+                    (addon.SupportsStreams ? "Stream support advertised." : "This add-on does not advertise stream support.") +
+                    (addon.SupportsCatalogs ? " Catalog support advertised." : string.Empty);
+            }
+            catch (Exception ex)
+            {
+                StatusText.Text = "Could not install this add-on: " + ex.Message;
+            }
+            finally
+            {
+                InstallButton.IsEnabled = true;
+                DirectorySearchButton.IsEnabled = true;
+            }
+        }
+
+        private async void DirectoryAttribution_Click(object sender, RoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri("https://stremio-addons.net/"));
         }
 
         private void ReloadInstalled()

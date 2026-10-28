@@ -1,8 +1,10 @@
 using System;
+using System.Threading;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using WatchStream.Xbox.Services;
 
 namespace WatchStream.Xbox
 {
@@ -18,24 +20,55 @@ namespace WatchStream.Xbox
         public string CurrentSection
         {
             get => _currentSection;
-            set
+            set { _currentSection = value ?? string.Empty; UpdateNavigationState(); }
+        }
+
+        private async void NavigationSidebar_Loaded(object sender, RoutedEventArgs e)
+        {
+            HomeButton.Content = "⌂   " + LocalizedText.Get("Nav_Home", "Home");
+            SearchButton.Content = "⌕   " + LocalizedText.Get("Nav_Search", "Search");
+            LibraryButton.Content = "▣   " + LocalizedText.Get("Nav_Library", "My Library");
+            DiscoverButton.Content = "◉   " + LocalizedText.Get("Nav_Discover", "Discover");
+            SeriesButton.Content = "▤   " + LocalizedText.Get("Nav_Series", "Series");
+            AddonsButton.Content = "◇   " + LocalizedText.Get("Nav_Addons", "Add-ons");
+            ConnectButton.Content = "↗   " + LocalizedText.Get("Nav_ConnectStremio", "Connect Stremio");
+            SettingsButton.Content = "⚙   " + LocalizedText.Get("Nav_Settings", "Settings");
+            UpdateNavigationState();
+            await RefreshProfileAsync();
+        }
+
+        private async System.Threading.Tasks.Task RefreshProfileAsync()
+        {
+            try
             {
-                _currentSection = value ?? string.Empty;
-                UpdateNavigationState();
+                var profile = await new StremioAccountService(new SecureSessionStore()).GetProfileAsync(CancellationToken.None);
+                if (profile == null)
+                {
+                    ProfileButton.Visibility = Visibility.Collapsed;
+                    ConnectButton.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                ProfileNameText.Text = profile.DisplayName;
+                ProfileEmailText.Text = string.IsNullOrWhiteSpace(profile.Email) ? "Stremio account" : profile.Email;
+                ProfileInitialsText.Text = GetInitials(profile.DisplayName);
+                ProfileButton.Visibility = Visibility.Visible;
+                ConnectButton.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception)
+            {
+                // Network trouble must not break navigation. Keep Connect available until identity is verified.
+                ProfileButton.Visibility = Visibility.Collapsed;
+                ConnectButton.Visibility = Visibility.Visible;
             }
         }
 
-        private void NavigationSidebar_Loaded(object sender, RoutedEventArgs e)
+        private static string GetInitials(string name)
         {
-            HomeButton.Content = "⌂   " + Services.LocalizedText.Get("Nav_Home", "Home");
-            SearchButton.Content = "⌕   " + Services.LocalizedText.Get("Nav_Search", "Search");
-            LibraryButton.Content = "▣   " + Services.LocalizedText.Get("Nav_Library", "My Library");
-            DiscoverButton.Content = "◉   " + Services.LocalizedText.Get("Nav_Discover", "Discover");
-            SeriesButton.Content = "▤   " + Services.LocalizedText.Get("Nav_Series", "Series");
-            AddonsButton.Content = "◇   " + Services.LocalizedText.Get("Nav_Addons", "Add-ons");
-            ConnectButton.Content = "↗   " + Services.LocalizedText.Get("Nav_ConnectStremio", "Connect Stremio");
-            SettingsButton.Content = "⚙   " + Services.LocalizedText.Get("Nav_Settings", "Settings");
-            UpdateNavigationState();
+            if (string.IsNullOrWhiteSpace(name)) return "S";
+            var parts = name.Trim().Split(new[] { ' ', '.', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1) return parts[0].Substring(0, 1).ToUpperInvariant();
+            return (parts[0].Substring(0, 1) + parts[parts.Length - 1].Substring(0, 1)).ToUpperInvariant();
         }
 
         private Button[] NavigationButtons => new[]
@@ -58,6 +91,12 @@ namespace WatchStream.Xbox
                 button.BorderThickness = new Thickness(selected ? 2 : 1);
                 button.Foreground = selected ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Color.FromArgb(255, 229, 229, 229));
             }
+            if (ProfileButton != null)
+            {
+                var selected = string.Equals(_currentSection, "Profile", StringComparison.OrdinalIgnoreCase);
+                ProfileButton.BorderBrush = selected ? FocusBrush : new SolidColorBrush(Color.FromArgb(255, 41, 67, 101));
+                ProfileButton.BorderThickness = new Thickness(selected ? 3 : 1);
+            }
         }
 
         private void NavButton_GotFocus(object sender, RoutedEventArgs e)
@@ -71,7 +110,6 @@ namespace WatchStream.Xbox
         }
 
         private void NavButton_LostFocus(object sender, RoutedEventArgs e) => UpdateNavigationState();
-
         private Frame? RootFrame => Window.Current.Content as Frame;
 
         private void Navigate(Type pageType, object? parameter = null)
@@ -79,8 +117,7 @@ namespace WatchStream.Xbox
             var frame = RootFrame;
             if (frame == null) return;
             if (frame.Content?.GetType() == pageType &&
-                (parameter == null || string.Equals(parameter as string, _currentSection, StringComparison.OrdinalIgnoreCase)))
-                return;
+                (parameter == null || string.Equals(parameter as string, _currentSection, StringComparison.OrdinalIgnoreCase))) return;
             frame.Navigate(pageType, parameter);
         }
 
@@ -92,5 +129,6 @@ namespace WatchStream.Xbox
         private void AddonsButton_Click(object sender, RoutedEventArgs e) => Navigate(typeof(AddonsPage));
         private void ConnectButton_Click(object sender, RoutedEventArgs e) => Navigate(typeof(AccountPage));
         private void SettingsButton_Click(object sender, RoutedEventArgs e) => Navigate(typeof(SettingsPage));
+        private void ProfileButton_Click(object sender, RoutedEventArgs e) => Navigate(typeof(ProfilePage));
     }
 }

@@ -90,6 +90,51 @@ namespace WatchStream.Xbox.Services
             }
         }
 
+        /// <summary>Returns only public account identity fields; never exposes the stored auth key.</summary>
+        public async Task<StremioUserProfile?> GetProfileAsync(CancellationToken cancellationToken)
+        {
+            var authKey = await _sessionStore.ReadSessionAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(authKey)) return null;
+
+            var body = "{\"type\":\"GetUser\",\"authKey\":" + JsonSerializer.Serialize(authKey, WatchStreamJson.Options) + "}";
+            using (var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "getUser"))
+            {
+                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                using (var response = await _httpClient.SendAsync(request, cancellationToken))
+                {
+                    var responseText = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException("Couldn't load the Stremio profile. Check your connection and retry.");
+
+                    using (var document = JsonDocument.Parse(responseText))
+                    {
+                        var root = document.RootElement;
+                        if (HasApiError(root) || !TryGetResult(root, out var result) || result.ValueKind == JsonValueKind.Null ||
+                            (result.ValueKind == JsonValueKind.Object && !result.EnumerateObject().MoveNext()))
+                        {
+                            await _sessionStore.ClearAsync(cancellationToken);
+                            return null;
+                        }
+
+                        var user = result;
+                        if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("user", out var nestedUser) && nestedUser.ValueKind == JsonValueKind.Object)
+                            user = nestedUser;
+
+                        var email = ReadString(user, "email") ?? string.Empty;
+                        var displayName = ReadString(user, "username") ?? ReadString(user, "name") ?? ReadString(user, "displayName");
+                        if (string.IsNullOrWhiteSpace(displayName) && !string.IsNullOrWhiteSpace(email))
+                        {
+                            var separator = email.IndexOf('@');
+                            displayName = separator > 0 ? email.Substring(0, separator) : email;
+                        }
+                        if (string.IsNullOrWhiteSpace(displayName)) displayName = "Stremio account";
+                        var avatarUrl = ReadString(user, "avatar") ?? ReadString(user, "image");
+                        return new StremioUserProfile(displayName, email, avatarUrl);
+                    }
+                }
+            }
+        }
+
         public async Task SignOutAsync(CancellationToken cancellationToken)
         {
             var authKey = await _sessionStore.ReadSessionAsync(cancellationToken);

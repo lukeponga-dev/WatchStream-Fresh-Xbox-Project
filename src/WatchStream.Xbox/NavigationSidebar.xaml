@@ -48,6 +48,19 @@
                 </StackPanel>
             </ScrollViewer>
             <StackPanel Grid.Row="3" Spacing="5">
+                <Button x:Name="ProfileButton" Click="ProfileButton_Click" Visibility="Collapsed" MinHeight="64" Padding="8" Background="#101B30" BorderBrush="#294365" BorderThickness="1" HorizontalContentAlignment="Stretch" UseSystemFocusVisuals="False">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="40"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Border Width="38" Height="38" CornerRadius="19" Background="#E50914" VerticalAlignment="Center">
+                            <TextBlock x:Name="ProfileInitialsText" Text="S" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="ProfileNameText" Text="Stremio account" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="ProfileEmailText" Text="Signed in" FontSize="10" Foreground="#9BA8C7" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="›" FontSize="24" Foreground="#39D6C5" VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
                 <Border Height="1" Background="#183B70" Margin="0,0,0,7"/>
                 <TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/>
                 <TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/>
