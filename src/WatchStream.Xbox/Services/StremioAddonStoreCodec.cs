@@ -40,9 +40,17 @@ namespace WatchStream.Xbox.Services
                 {
                     var url = loadUrl(key);
                     if (string.IsNullOrWhiteSpace(url))
-                        throw new InvalidOperationException("An installed add-on URL secret is missing from Windows PasswordVault.");
-                    item["ManifestUrl"] = url;
+                    {
+                        // A previous build may have exhausted the Windows credential quota.
+                        // Preserve recoverable add-ons and skip only records whose URL is irretrievable.
+                        item["ManifestUrl"] = string.Empty;
+                    }
+                    else
+                    {
+                        item["ManifestUrl"] = url;
+                    }
                     item.Remove("ManifestUrlVaultKey");
+                    needsMigration = true;
                 }
                 else if (!string.IsNullOrWhiteSpace((string?)item["ManifestUrl"]))
                 {

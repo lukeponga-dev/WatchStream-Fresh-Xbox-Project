@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -55,10 +55,21 @@ namespace WatchStream.Xbox.Services
                         var extras = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         var extraDefinitions = catalog.TryGetProperty("extra", out var definitions) && definitions.ValueKind == JsonValueKind.Array
                             ? definitions.EnumerateArray().ToList() : new List<JsonElement>();
+                        // Apply supported search arguments and choose a valid default for required filters.
                         if (!string.IsNullOrWhiteSpace(searchQuery) && extraDefinitions.Any(x => string.Equals(ReadString(x, "name"), "search", StringComparison.OrdinalIgnoreCase)))
                             extras["search"] = searchQuery.Trim();
-                        if (extraDefinitions.Any(x => x.TryGetProperty("isRequired", out var required) && required.ValueKind == JsonValueKind.True &&
-                            (!extras.TryGetValue(ReadString(x, "name") ?? string.Empty, out var supplied) || string.IsNullOrWhiteSpace(supplied)))) continue;
+                        foreach (var definition in extraDefinitions)
+                        {
+                            if (!definition.TryGetProperty("isRequired", out var required) || required.ValueKind != JsonValueKind.True) continue;
+                            var extraName = ReadString(definition, "name");
+                            if (string.IsNullOrWhiteSpace(extraName) || extras.ContainsKey(extraName)) continue;
+                            if (definition.TryGetProperty("options", out var options) && options.ValueKind == JsonValueKind.Array)
+                            {
+                                var firstOption = options.EnumerateArray().FirstOrDefault(x => x.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(x.GetString()));
+                                if (firstOption.ValueKind == JsonValueKind.String) extras[extraName] = firstOption.GetString()!;
+                            }
+                        }
+                        if (extraDefinitions.Any(x => x.TryGetProperty("isRequired", out var required) && required.ValueKind == JsonValueKind.True && (!extras.TryGetValue(ReadString(x, "name") ?? string.Empty, out var supplied) || string.IsNullOrWhiteSpace(supplied)))) continue;
                         var catalogUri = StremioAddonService.BuildResourceUri(source.ManifestUrl, "catalog", mediaType, id, extras);                        using var response = await _http.GetAsync(catalogUri, cancellationToken);
                         if (!response.IsSuccessStatusCode) { failures++; continue; }
                         var parsedMetas = StremioProtocolParser.ParseCatalogMetas(await response.Content.ReadAsStringAsync());
@@ -76,6 +87,75 @@ namespace WatchStream.Xbox.Services
             return unique;
         }
 
+        public sealed class CatalogSection
+        {
+            public string AddonName { get; set; } = string.Empty;
+            public string CatalogName { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
+            public IReadOnlyList<MediaItem> Items { get; set; } = Array.Empty<MediaItem>();
+        }
+
+        public async Task<IReadOnlyList<CatalogSection>> GetCatalogSectionsAsync(CancellationToken cancellationToken, string? searchQuery = null)
+        {
+            var sources = _addons.GetInstalled().Select(x => (x.Name, x.ManifestUrl)).ToList();
+            if (!sources.Any(x => string.Equals(x.ManifestUrl, CinemetaManifestUrl, StringComparison.OrdinalIgnoreCase)))
+                sources.Add(("Cinemeta", CinemetaManifestUrl));
+
+            var sections = new List<CatalogSection>();
+            var failures = 0;
+            foreach (var source in sources)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    using var manifestResponse = await _http.GetAsync(source.ManifestUrl, cancellationToken);
+                    if (!manifestResponse.IsSuccessStatusCode) { failures++; continue; }
+                    using var manifest = JsonDocument.Parse(await manifestResponse.Content.ReadAsStringAsync());
+                    if (!manifest.RootElement.TryGetProperty("catalogs", out var catalogs) || catalogs.ValueKind != JsonValueKind.Array) continue;
+
+                    foreach (var catalog in catalogs.EnumerateArray())
+                    {
+                        var type = ReadString(catalog, "type");
+                        var id = ReadString(catalog, "id");
+                        if ((type != "movie" && type != "series") || string.IsNullOrWhiteSpace(id) ||
+                            !SupportsManifestResource(manifest.RootElement, "catalog", type, null)) continue;
+
+                        var extras = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        var extraDefinitions = catalog.TryGetProperty("extra", out var definitions) && definitions.ValueKind == JsonValueKind.Array
+                            ? definitions.EnumerateArray().ToList() : new List<JsonElement>();
+                        if (!string.IsNullOrWhiteSpace(searchQuery) && extraDefinitions.Any(x => string.Equals(ReadString(x, "name"), "search", StringComparison.OrdinalIgnoreCase)))
+                            extras["search"] = searchQuery.Trim();
+                        foreach (var definition in extraDefinitions)
+                        {
+                            if (!definition.TryGetProperty("isRequired", out var required) || required.ValueKind != JsonValueKind.True) continue;
+                            var extraName = ReadString(definition, "name");
+                            if (string.IsNullOrWhiteSpace(extraName) || extras.ContainsKey(extraName)) continue;
+                            if (definition.TryGetProperty("options", out var options) && options.ValueKind == JsonValueKind.Array)
+                            {
+                                var firstOption = options.EnumerateArray().FirstOrDefault(x => x.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(x.GetString()));
+                                if (firstOption.ValueKind == JsonValueKind.String) extras[extraName] = firstOption.GetString()!;
+                            }
+                        }
+                        if (extraDefinitions.Any(x => x.TryGetProperty("isRequired", out var required) && required.ValueKind == JsonValueKind.True && (!extras.TryGetValue(ReadString(x, "name") ?? string.Empty, out var supplied) || string.IsNullOrWhiteSpace(supplied)))) continue;
+
+                        var uri = StremioAddonService.BuildResourceUri(source.ManifestUrl, "catalog", type, id, extras);
+                        using var response = await _http.GetAsync(uri, cancellationToken);
+                        if (!response.IsSuccessStatusCode) { failures++; continue; }
+                        var items = StremioProtocolParser.ParseCatalogMetas(await response.Content.ReadAsStringAsync())
+                            .Select(meta => new MediaItem(meta.Id, meta.Type, meta.Name, meta.Poster, meta.Year, meta.Description)).ToList();
+                        if (items.Count == 0) continue;
+                        var catalogName = ReadString(catalog, "name");
+                        sections.Add(new CatalogSection { AddonName = source.Name ?? "Add-on", CatalogName = string.IsNullOrWhiteSpace(catalogName) ? id : catalogName, Type = type, Items = items });
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { failures++; }
+            }
+
+            if (sections.Count == 0 && failures > 0)
+                throw new InvalidOperationException("No add-on catalogs responded. Check your connection or installed add-ons.");
+            return sections;
+        }
         private static bool SupportsManifestResource(JsonElement manifest, string name, string type, string? id)
         {
             if (!manifest.TryGetProperty("resources", out var resources) || resources.ValueKind != JsonValueKind.Array) return false;

@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using WatchStream.Domain.Models;
 using WatchStream.Xbox.Services;
 
@@ -73,38 +75,42 @@ namespace WatchStream.Xbox
 
             try
             {
-                IReadOnlyList<WatchStream.Core.Models.MediaItem> results;
-                if (string.Equals(_currentCategory, "Library", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(_currentCategory, "Library", StringComparison.OrdinalIgnoreCase))
                 {
-                    results = await _libraryService.GetLibraryAsync(CancellationToken.None);
-                }
-                else if (string.Equals(_currentCategory, "Series", StringComparison.OrdinalIgnoreCase))
-                {
-                    results = await _catalogService.GetDiscoverAsync("series", CancellationToken.None, searchQuery);
-                }
-                else if (string.Equals(_currentCategory, "Search", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (string.IsNullOrWhiteSpace(searchQuery))
+                    if (string.Equals(_currentCategory, "Search", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(searchQuery))
                     {
                         ShowEmptyState("Search for a title", "Enter a movie or series name above, then select Search.");
                         CategoryDesc.Text = "Search movies and series from your available catalogs.";
                         return;
                     }
-                    var movies = await _catalogService.GetDiscoverAsync("movie", CancellationToken.None, searchQuery);
-                    var series = await _catalogService.GetDiscoverAsync("series", CancellationToken.None, searchQuery);
-                    results = movies.Concat(series)
-                        .GroupBy(item => item.Type + "|" + item.Id, StringComparer.OrdinalIgnoreCase)
-                        .Select(group => group.First()).ToList();
-                }
-                else
-                {
-                    var movies = await _catalogService.GetDiscoverAsync("movie", CancellationToken.None, searchQuery);
-                    var series = await _catalogService.GetDiscoverAsync("series", CancellationToken.None, searchQuery);
-                    results = movies.Concat(series)
-                        .GroupBy(item => item.Type + "|" + item.Id, StringComparer.OrdinalIgnoreCase)
-                        .Select(group => group.First()).ToList();
+
+                    var sections = await _catalogService.GetCatalogSectionsAsync(CancellationToken.None, searchQuery);
+                    if (string.Equals(_currentCategory, "Series", StringComparison.OrdinalIgnoreCase))
+                        sections = sections.Where(section => string.Equals(section.Type, "series", StringComparison.OrdinalIgnoreCase)).ToList();
+                    CatalogSectionsPanel.Children.Clear();
+                    foreach (var section in sections)
+                        CatalogSectionsPanel.Children.Add(BuildCatalogSection(section));
+                    MediaGrid.ItemsSource = null;
+                    if (sections.Count == 0)
+                    {
+                        CatalogSectionsScrollViewer.Visibility = Visibility.Collapsed;
+                        ResultsScrollViewer.Visibility = Visibility.Collapsed;
+                        ShowEmptyState("No catalogs found", "Install an add-on that provides movie or series catalogs, then try again.");
+                        CategoryDesc.Text = "No titles returned from available add-on catalogs.";
+                    }
+                    else
+                    {
+                        StatePanel.Visibility = Visibility.Collapsed;
+                        ResultsScrollViewer.Visibility = Visibility.Collapsed;
+                        CatalogSectionsScrollViewer.Visibility = Visibility.Visible;
+                        StateProgressRing.IsActive = false;
+                        CategoryDesc.Text = sections.Count + " catalogs loaded from your installed add-ons.";
+                    }
+                    return;
                 }
 
+                CatalogSectionsScrollViewer.Visibility = Visibility.Collapsed;
+                IReadOnlyList<WatchStream.Core.Models.MediaItem> results = await _libraryService.GetLibraryAsync(CancellationToken.None);
                 var cards = results.Select(ToDomainItem).ToList();
                 MediaGrid.ItemsSource = cards;
                 if (cards.Count == 0)
@@ -127,11 +133,15 @@ namespace WatchStream.Xbox
                 ShowErrorState("Loading was cancelled", "Try loading this section again.");
                 RetryButton.Focus(FocusState.Programmatic);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                const string message = "WatchStream couldn't load this section. Check your connection and Stremio account, then try again.";
-                CategoryDesc.Text = message;
-                ShowErrorState("Couldn't load content", message);
+                var detail = ex is System.Net.Http.HttpRequestException
+                    ? "The catalog server could not be reached. Check the Xbox internet connection and try again."
+                    : ex is TaskCanceledException
+                        ? "The catalog request timed out. Check your connection and try again."
+                        : "The catalog response could not be loaded. Check your connection and installed add-ons, then try again.";
+                CategoryDesc.Text = detail;
+                ShowErrorState("Couldn't load content", detail);
                 RetryButton.Focus(FocusState.Programmatic);
             }
             finally
@@ -180,6 +190,34 @@ namespace WatchStream.Xbox
             ResultsScrollViewer.Visibility = Visibility.Visible;
         }
 
+        private StackPanel BuildCatalogSection(StremioCatalogService.CatalogSection section)
+        {
+            var heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(4, 0, 4, 4) };
+            heading.Children.Add(new TextBlock { Text = section.CatalogName, FontSize = 25, FontWeight = Windows.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 244, 246, 251)), VerticalAlignment = VerticalAlignment.Center });
+            heading.Children.Add(new TextBlock { Text = section.AddonName + " · " + (section.Type == "series" ? "Series" : "Movies") + " · " + section.Items.Count, FontSize = 13, Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 155, 165, 181)), VerticalAlignment = VerticalAlignment.Center });
+
+            var cards = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            foreach (var coreItem in section.Items)
+            {
+                var item = ToDomainItem(coreItem);
+                var cardContent = new Grid { Width = 170, Height = 260, Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 27, 48)) };
+                if (Uri.TryCreate(item.PosterUrl, UriKind.Absolute, out var posterUri) && (posterUri.Scheme == Uri.UriSchemeHttps || posterUri.Scheme == Uri.UriSchemeHttp))
+                {
+                    try { cardContent.Children.Add(new Image { Source = new BitmapImage(posterUri), Stretch = Windows.UI.Xaml.Media.Stretch.UniformToFill, Width = 170, Height = 260 }); }
+                    catch { }
+                }
+                cardContent.Children.Add(new Border { Background = new SolidColorBrush(Windows.UI.Color.FromArgb(220, 0, 0, 0)), VerticalAlignment = VerticalAlignment.Bottom, Padding = new Thickness(9), Child = new TextBlock { Text = item.Name, Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255)), FontSize = 14, TextWrapping = TextWrapping.Wrap, MaxLines = 2 } });
+                var button = new Button { Content = cardContent, Width = 182, Height = 272, Padding = new Thickness(0), Margin = new Thickness(2), Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 27, 48)), BorderThickness = new Thickness(0), Tag = item, HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
+                button.Click += MediaCard_Click;
+                cards.Children.Add(button);
+            }
+
+            var horizontal = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = cards, ZoomMode = ZoomMode.Disabled };
+            var container = new StackPanel { Spacing = 10 };
+            container.Children.Add(heading);
+            container.Children.Add(horizontal);
+            return container;
+        }
         private static MediaItem ToDomainItem(WatchStream.Core.Models.MediaItem item)
         {
             DateTime? releaseDate = null;

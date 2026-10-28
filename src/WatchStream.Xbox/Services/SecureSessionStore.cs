@@ -11,6 +11,9 @@ namespace WatchStream.Xbox.Services
     {
         private const string ResourceName = "WatchStream.Stremio";
         private const string UserName = "session-auth-key";
+        // Older builds incorrectly stored every public add-on manifest URL as a credential.
+        // Remove only entries from that obsolete resource before writing the actual session key.
+        private const string LegacyAddonUrlResource = "WatchStream.AddonManifestUrl.v1";
 
         public Task<string?> ReadSessionAsync(CancellationToken cancellationToken)
         {
@@ -29,6 +32,7 @@ namespace WatchStream.Xbox.Services
             cancellationToken.ThrowIfCancellationRequested();
             var vault = new PasswordVault();
             RemoveExisting(vault);
+            CleanupLegacyAddonUrlCredentials(vault);
             if (!string.IsNullOrWhiteSpace(sessionMaterial))
                 vault.Add(new PasswordCredential(ResourceName, UserName, sessionMaterial));
             return Task.CompletedTask;
@@ -45,6 +49,20 @@ namespace WatchStream.Xbox.Services
         {
             try { vault.Remove(vault.Retrieve(ResourceName, UserName)); }
             catch (Exception) { }
+        }
+
+        private static void CleanupLegacyAddonUrlCredentials(PasswordVault vault)
+        {
+            try
+            {
+                foreach (var credential in vault.FindAllByResource(LegacyAddonUrlResource))
+                    vault.Remove(credential);
+            }
+            catch (Exception)
+            {
+                // FindAllByResource may itself fail when the system vault is exhausted or empty.
+                // Do not mask the original session-store operation; add-on migration also cleans these entries.
+            }
         }
     }
 }

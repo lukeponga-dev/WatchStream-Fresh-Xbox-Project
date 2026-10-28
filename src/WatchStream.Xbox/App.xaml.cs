@@ -16,12 +16,24 @@ namespace WatchStream.Xbox
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             Suspending += OnSuspending;
 
-            // Capture global crashes to identify the exact failure point
+            // Capture the full exception rather than only the generated XAML event-handler frame.
+            // Do not mark arbitrary unhandled exceptions as handled: continuing after an unknown
+            // XAML failure can leave navigation and page state corrupted.
             this.UnhandledException += (s, e) =>
             {
-                System.Diagnostics.Debug.WriteLine($"[CRITICAL CRASH] {e.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack: {e.Exception.StackTrace}");
-                e.Handled = false; // Keep it crashing so we see it in the debugger, but we now have the log
+                var details = "[WATCHSTREAM UNHANDLED EXCEPTION]\r\n" + e.Exception;
+                System.Diagnostics.Debug.WriteLine(details);
+                try
+                {
+                    var folder = Windows.Storage.ApplicationData.Current.LocalFolder;
+                    var path = System.IO.Path.Combine(folder.Path, "watchstream-crash.log");
+                    System.IO.File.AppendAllText(path, DateTimeOffset.UtcNow.ToString("O") + "\r\n" + details + "\r\n\r\n");
+                }
+                catch (Exception logException)
+                {
+                    System.Diagnostics.Debug.WriteLine("[WATCHSTREAM CRASH LOG FAILED] " + logException);
+                }
+                e.Handled = false;
             };
         }
 

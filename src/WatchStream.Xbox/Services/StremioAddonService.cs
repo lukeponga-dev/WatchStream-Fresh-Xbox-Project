@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -87,14 +87,20 @@ namespace WatchStream.Xbox.Services
                     var vault = new PasswordVault();
                     var restoredJson = StremioAddonStoreCodec.RestoreSerializedUrls(fileJson, key =>
                     {
-                        var credential = vault.FindAllByResource(AddonUrlVaultResource)
-                            .FirstOrDefault(x => string.Equals(x.UserName, key, StringComparison.Ordinal));
-                        if (credential == null) return null;
-                        credential.RetrievePassword();
-                        return credential.Password;
+                        try
+                        {
+                            var credential = vault.FindAllByResource(AddonUrlVaultResource)
+                                .FirstOrDefault(x => string.Equals(x.UserName, key, StringComparison.Ordinal));
+                            if (credential == null) return null;
+                            credential.RetrievePassword();
+                            return credential.Password;
+                        }
+                        catch { return null; }
                     }, out var needsMigration);
 
                     var addons = JsonSerializer.Deserialize<List<InstalledAddon>>(restoredJson, WatchStreamJson.Options) ?? new List<InstalledAddon>();
+                    // Manifest URLs identify public add-on endpoints; they are not account credentials.
+                    // Migrate legacy vault-backed records to the app-local JSON store and free vault slots.
                     if (needsMigration) SaveInstalled(addons);
                     return addons;
                 }
@@ -112,30 +118,20 @@ namespace WatchStream.Xbox.Services
 
         private static void SaveInstalled(IReadOnlyList<InstalledAddon> addons)
         {
-            var vault = new PasswordVault();
-            var activeKeys = new HashSet<string>(StringComparer.Ordinal);
-            var protectedJson = StremioAddonStoreCodec.ProtectSerializedUrls(
-                JsonSerializer.Serialize(addons, WatchStreamJson.Options), url =>
-                {
-                    var key = Guid.NewGuid().ToString("N");
-                    vault.Add(new PasswordCredential(AddonUrlVaultResource, key, url));
-                    activeKeys.Add(key);
-                    return key;
-                });
-
-            // The JSON file contains only opaque vault keys, never full manifest URLs or query secrets.
-            File.WriteAllText(InstalledAddonsPath, protectedJson);
+            var safeAddons = addons.Where(x => x != null && !string.IsNullOrWhiteSpace(x.ManifestUrl)).ToList();
+            // Add-on manifest URLs are public endpoint identifiers, not authentication secrets.
+            // Keeping one PasswordVault credential per URL exhausts the per-app credential quota.
+            File.WriteAllText(InstalledAddonsPath, JsonSerializer.Serialize(safeAddons, WatchStreamJson.Options));
             ApplicationData.Current.LocalSettings.Values.Remove(SettingsKey);
 
+            // Clean up credentials created by older WatchStream builds. Do not touch unrelated vault entries.
             try
             {
-                foreach (var credential in vault.FindAllByResource(AddonUrlVaultResource))
-                {
-                    if (!activeKeys.Contains(credential.UserName))
-                        vault.Remove(credential);
-                }
+                var vault = new PasswordVault();
+                foreach (var credential in vault.FindAllByResource(AddonUrlVaultResource).ToList())
+                    vault.Remove(credential);
             }
-            catch { /* No existing credentials is a normal first-run state. */ }
+            catch { /* No legacy credentials is a normal first-run state. */ }
         }
 
         public sealed class AddonDirectoryEntry
@@ -426,13 +422,44 @@ namespace WatchStream.Xbox.Services
             if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(itemId))
                 throw new ArgumentException("A content type and item ID are required.");
 
-            var streamTasks = GetInstalled()
-                .Where(x => x.SupportsResource("stream", type, itemId))
-                .Select(async addon =>
+            // Stremio series metadata may contain distinct episode/video IDs. Stream resources
+            // must be requested with each video ID, not only the parent series ID.
+            var videoIds = new List<string> { itemId };
+            if (string.Equals(type, "series", StringComparison.OrdinalIgnoreCase))
+            {
+                try
                 {
+                    var metadataJson = await RequestMetadataAsync(type, itemId, cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(metadataJson))
+                    {
+                        using var metadata = JsonDocument.Parse(metadataJson);
+                        if (metadata.RootElement.TryGetProperty("videos", out var videos) && videos.ValueKind == JsonValueKind.Array)
+                        {
+                            var episodeIds = videos.EnumerateArray()
+                                .Select(video => GetString(video, "id"))
+                                .Where(id => !string.IsNullOrWhiteSpace(id))
+                                .Select(id => id!)
+                                .Distinct(StringComparer.Ordinal)
+                                .ToList();
+                            if (episodeIds.Count > 0) videoIds = episodeIds;
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { /* Fall back to the parent ID if episode metadata is unavailable. */ }
+            }
+
+            var streamTasks = GetInstalled()
+                .SelectMany(addon => videoIds
+                    .Where(videoId => addon.SupportsResource("stream", type, videoId))
+                    .Select(videoId => new { Addon = addon, VideoId = videoId }))
+                .Select(async target =>
+                {
+                    var addon = target.Addon;
+                    var videoId = target.VideoId;
                     try
                     {
-                        var streamUrl = BuildResourceUri(addon.ManifestUrl, "stream", type, itemId, null);
+                        var streamUrl = BuildResourceUri(addon.ManifestUrl, "stream", type, videoId, null);
                         using var response = await GetSafeAsync(streamUrl, cancellationToken, allowLocalhostHttp: streamUrl.IsLoopback && streamUrl.Scheme == Uri.UriSchemeHttp);
                         if (!response.IsSuccessStatusCode) return Enumerable.Empty<StreamSource>();
 

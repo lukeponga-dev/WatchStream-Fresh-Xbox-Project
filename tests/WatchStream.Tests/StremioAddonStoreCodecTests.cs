@@ -28,7 +28,7 @@ public sealed class StremioAddonStoreCodecTests
             return secretUrl;
         }, out var needsMigration);
 
-        Assert.False(needsMigration);
+        Assert.True(needsMigration); // Migrate URLs out of PasswordVault to avoid its credential quota.
         using var document = JsonDocument.Parse(restored);
         Assert.Equal(secretUrl, document.RootElement[0].GetProperty("ManifestUrl").GetString());
     }
@@ -45,10 +45,13 @@ public sealed class StremioAddonStoreCodecTests
     }
 
     [Fact]
-    public void RejectsMissingVaultSecretInsteadOfReturningAnEmptyUrl()
+    public void MarksMissingVaultSecretForMigrationSoBrokenRecordsCanBeSkipped()
     {
         const string protectedJson = "[{\"Id\":\"example\",\"Name\":\"Example\",\"ManifestUrl\":\"\",\"ManifestUrlVaultKey\":\"missing\"}]";
-        Assert.Throws<InvalidOperationException>(() =>
-            StremioAddonStoreCodec.RestoreSerializedUrls(protectedJson, _ => null, out _));
+        var restored = StremioAddonStoreCodec.RestoreSerializedUrls(protectedJson, _ => null, out var needsMigration);
+        Assert.True(needsMigration);
+        using var document = JsonDocument.Parse(restored);
+        Assert.Equal(string.Empty, document.RootElement[0].GetProperty("ManifestUrl").GetString());
+        Assert.False(document.RootElement[0].TryGetProperty("ManifestUrlVaultKey", out _));
     }
 }

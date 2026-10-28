@@ -112,6 +112,20 @@ namespace WatchStream.Xbox
             }
         }
 
+        private async void FindStreamsButton_Click(object sender, RoutedEventArgs e)
+        {
+            FindStreamsButton.IsEnabled = false;
+            StreamsStatusText.Text = "Searching installed add-ons for compatible streams...";
+            try
+            {
+                await LoadMediaDetailsAsync();
+            }
+            finally
+            {
+                FindStreamsButton.IsEnabled = true;
+            }
+        }
+
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.DataContext is DomainStreamSource source &&

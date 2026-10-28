@@ -67,6 +67,9 @@
 
         <!-- Content Grid -->
         <Grid Grid.Row="1">
+            <ScrollViewer x:Name="CatalogSectionsScrollViewer" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="CatalogSectionsPanel" Spacing="26" Padding="0,0,0,24" />
+            </ScrollViewer>
             <ScrollViewer x:Name="ResultsScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <GridView x:Name="MediaGrid"
                           IsItemClickEnabled="False"

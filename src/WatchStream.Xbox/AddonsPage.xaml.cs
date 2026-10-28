@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
@@ -20,7 +20,15 @@ namespace WatchStream.Xbox
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ReloadInstalled();
+#if WATCHSTREAM_ADDON_DIRECTORY_PERMISSION_GRANTED
             await LoadDirectoryAsync();
+#else
+            DirectorySearchButton.IsEnabled = false;
+            DirectorySearchBox.IsEnabled = false;
+            DirectoryEmptyText.Text = "Community directory browsing is disabled until written permission for this integration is granted. You can still install an add-on using its HTTPS manifest URL above.";
+            DirectoryEmptyText.Visibility = Visibility.Visible;
+            DirectoryList.Visibility = Visibility.Collapsed;
+#endif
         }
 
         private async Task LoadDirectoryAsync()
@@ -32,7 +40,7 @@ namespace WatchStream.Xbox
             try
             {
                 var results = await _addonService.SearchDirectoryAsync(DirectorySearchBox.Text, CancellationToken.None);
-                DirectoryList.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<StremioAddonService.AddonDirectoryEntry>(results);
+                DirectoryList.ItemsSource = new System.Collections.Generic.List<StremioAddonService.AddonDirectoryEntry>(results);
                 DirectoryEmptyText.Text = results.Count == 0
                     ? "No add-ons matched that search. Try another name or category."
                     : string.Empty;
@@ -42,13 +50,19 @@ namespace WatchStream.Xbox
             }
             catch (Exception ex)
             {
-                DirectoryEmptyText.Text = "Could not load the community directory. Check your connection and try Search again. " + ex.Message;
+                DirectoryEmptyText.Text = ex is TaskCanceledException
+                    ? "The community directory request timed out. Check your connection and try again."
+                    : ex is System.Net.Http.HttpRequestException
+                        ? "The community directory could not be reached. Check your connection and try again."
+                        : "The community directory could not be loaded. Try again later.";
                 DirectoryEmptyText.Visibility = Visibility.Visible;
                 DirectoryList.Visibility = Visibility.Collapsed;
             }
             finally
             {
+#if WATCHSTREAM_ADDON_DIRECTORY_PERMISSION_GRANTED
                 DirectorySearchButton.IsEnabled = true;
+#endif
             }
         }
 
@@ -102,20 +116,66 @@ namespace WatchStream.Xbox
         private void ReloadInstalled()
         {
             var installed = _addonService.GetInstalled();
-            try
+            if (installed.Count == 0)
             {
-                // Use a WinRT-friendly observable vector rather than an array/IReadOnlyList.
-                AddonsList.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<InstalledAddon>(installed);
-            }
-            catch (Exception ex)
-            {
-                StatusText.Text = "Add-ons list binding failed: " + ex.GetType().FullName + " | " + ex.Message + " | source=" + installed.GetType().FullName + " | count=" + installed.Count;
+                // Do not assign an empty generic collection to the UWP ListView. Some
+                // UWP/XAML projections reject this source before the empty state renders.
+                AddonsList.ItemsSource = null;
                 AddonsList.Visibility = Visibility.Collapsed;
                 EmptyAddonsText.Visibility = Visibility.Visible;
+                StatusText.Text = "No add-ons installed on this device yet.";
                 return;
             }
-            EmptyAddonsText.Visibility = installed.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            AddonsList.Visibility = installed.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+
+            // Use a plain CLR List as the UWP ItemsSource. The WinRT XAML projection
+            // can reject ObservableCollection<T> here with E_INVALIDARG for this model.
+            // Avoid assigning ItemsSource entirely: this UWP XAML projection throws
+            // E_INVALIDARG for both null and CLR collection sources in this page.
+            // Populate the existing ListView directly with visual containers instead.
+            AddonsList.ItemsSource = null;
+            AddonsList.Items.Clear();
+            foreach (var addon in installed)
+            {
+                var title = new TextBlock
+                {
+                    Text = addon.Name ?? "Unnamed add-on",
+                    FontSize = 15,
+                    FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                    TextWrapping = TextWrapping.Wrap
+                };
+                var description = new TextBlock
+                {
+                    Text = addon.Description ?? string.Empty,
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Color.FromArgb(255, 169, 181, 209)),
+                    TextWrapping = TextWrapping.Wrap
+                };
+                var remove = new Button
+                {
+                    Content = "Remove",
+                    Tag = addon.ManifestUrl,
+                    MinWidth = 90,
+                    MinHeight = 40,
+                    Background = new SolidColorBrush(Color.FromArgb(255, 66, 32, 51)),
+                    Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 216, 225)),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                remove.Click += RemoveButton_Click;
+                var row = new Grid { ColumnSpacing = 10, Background = new SolidColorBrush(Color.FromArgb(255, 16, 31, 58)), Padding = new Thickness(10) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                var text = new StackPanel { Spacing = 3 };
+                text.Children.Add(title);
+                text.Children.Add(description);
+                text.Children.Add(new TextBlock { Text = addon.Capabilities + " · " + addon.Catalogs.Count + " catalog(s) · " + (addon.SyncStatus ?? string.Empty), FontSize = 11, Foreground = new SolidColorBrush(Color.FromArgb(255, 117, 229, 211)), TextWrapping = TextWrapping.Wrap });
+                Grid.SetColumn(text, 0);
+                Grid.SetColumn(remove, 1);
+                row.Children.Add(text);
+                row.Children.Add(remove);
+                AddonsList.Items.Add(new ListViewItem { Content = row, HorizontalContentAlignment = HorizontalAlignment.Stretch });
+            }
+            EmptyAddonsText.Visibility = Visibility.Collapsed;
+            AddonsList.Visibility = Visibility.Visible;
             StatusText.Text = installed.Count + (installed.Count == 1 ? " add-on installed on this device." : " add-ons installed on this device.");
         }
 
