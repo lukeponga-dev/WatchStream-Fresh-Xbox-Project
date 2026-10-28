@@ -8,7 +8,7 @@
     Loaded="Page_Loaded">
 
     <Page.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#39D6C5" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#E50914" />
         <SolidColorBrush x:Key="MutedBrush" Color="#9BA5B5" />
 
         <Style x:Key="StreamSourceButtonStyle" TargetType="Button">
@@ -50,7 +50,7 @@
     </Page.Resources>
 
     <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="238"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
         <local:NavigationSidebar Grid.Column="0" CurrentSection=""/>
         <Grid Grid.Column="1" Padding="40">
         <Grid.ColumnDefinitions>

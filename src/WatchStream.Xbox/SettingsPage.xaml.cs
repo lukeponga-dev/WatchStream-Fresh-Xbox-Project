@@ -22,7 +22,6 @@ namespace WatchStream.Xbox
             ServerStatusText.Text = string.IsNullOrWhiteSpace(ServerUrlBox.Text)
                 ? "Enter the IP address of the PC running Stremio Server, for example http://192.168.1.20:11470."
                 : "Saved server: " + ServerUrlBox.Text + " (not checked yet).";
-            SettingsNavButton.Focus(FocusState.Programmatic);
         }
 
         private async void TestServerButton_Click(object sender, RoutedEventArgs e)

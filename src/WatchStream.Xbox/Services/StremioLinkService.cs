@@ -142,22 +142,13 @@ namespace WatchStream.Xbox.Services
             return false;
         }
 
-        private static bool TryReadString(JsonElement element, string property, out string value)
-        {
-            value = string.Empty;
-            if (element.ValueKind != JsonValueKind.Object ||
-                !element.TryGetProperty(property, out var candidate) ||
-                candidate.ValueKind != JsonValueKind.String ||
-                string.IsNullOrWhiteSpace(candidate.GetString()))
-                return false;
-            value = candidate.GetString()!;
-            return true;
-        }
-
         private static bool HasApiError(JsonElement root) =>
             root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var error) &&
             error.ValueKind != JsonValueKind.Null && error.ValueKind != JsonValueKind.False &&
             !(error.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(error.GetString()));
+        private static bool TryReadString(JsonElement element, string property, out string value) =>
+            StremioProtocolParser.TryReadString(element, property, out value);
+
     }
 
     public sealed class StremioLinkException : InvalidOperationException

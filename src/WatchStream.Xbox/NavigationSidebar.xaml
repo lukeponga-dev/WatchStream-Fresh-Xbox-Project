@@ -1,33 +1,57 @@
-<UserControl
+﻿<UserControl
     x:Class="WatchStream.Xbox.NavigationSidebar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Loaded="NavigationSidebar_Loaded">
     <UserControl.Resources>
         <Style x:Key="NavButtonStyle" TargetType="Button">
-            <Setter Property="MinHeight" Value="43"/><Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Padding" Value="12,0"/><Setter Property="FontSize" Value="14"/><Setter Property="Background" Value="#101F3A"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderThickness" Value="0"/><Setter Property="UseSystemFocusVisuals" Value="False"/>
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Background" Value="#080808"/>
+            <Setter Property="Foreground" Value="#E5E5E5"/>
+            <Setter Property="BorderBrush" Value="#080808"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="UseSystemFocusVisuals" Value="False"/>
         </Style>
     </UserControl.Resources>
-    <Border Width="220" Background="#07142A" BorderBrush="#183B70" BorderThickness="0,0,1,0" Padding="18,22">
+    <Border Width="238" Background="#080808" BorderBrush="#242424" BorderThickness="0,0,1,0" Padding="18,22">
         <Grid>
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="18"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="18"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-                <Border Width="36" Height="36" CornerRadius="10" Background="#39D6C5"><TextBlock Text="▶" FontSize="20" FontWeight="Bold" Foreground="#07111D" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                <StackPanel VerticalAlignment="Center" Spacing="1"><TextBlock Text="WATCHSTREAM" FontSize="15" FontWeight="Bold" CharacterSpacing="45"/><TextBlock Text="YOUR MEDIA, YOUR WAY" FontSize="8" Foreground="#9BA8C7" CharacterSpacing="35"/></StackPanel>
+                <Border Width="36" Height="36" CornerRadius="10" Background="#E50914">
+                    <TextBlock Text="W" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="WATCHSTREAM" FontSize="15" FontWeight="Bold" CharacterSpacing="45"/>
+                    <TextBlock Text="YOUR MEDIA, YOUR WAY" FontSize="8" Foreground="#9BA8C7" CharacterSpacing="35"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="2" Spacing="7">
-                <TextBlock Text="MENU" FontSize="10" FontWeight="Bold" Foreground="#7181A2" CharacterSpacing="140" Margin="10,0,0,4"/>
-                <Button x:Name="HomeButton" Content="⌂   Home" Click="HomeButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Home"/>
-                <Button x:Name="DiscoverButton" Content="✦   Discover" Click="DiscoverButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Discover"/>
-                <Button x:Name="LibraryButton" Content="▤   Library" Click="LibraryButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Library"/>
-                <Button x:Name="SeriesButton" Content="▣   Series" Click="SeriesButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Series"/>
-                <Button x:Name="SearchButton" Content="⌕   Search" Click="SearchButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Search"/>
-                <Border Height="1" Background="#183B70" Margin="8,12"/>
-                <Button x:Name="AddonsButton" Content="▦   Add-ons" Click="AddonsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Add-ons"/>
-                <Button x:Name="ConnectButton" Content="↔   Connect Stremio" Click="ConnectButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Sign in"/>
-                <Button x:Name="SettingsButton" Content="⚙   Settings" Click="SettingsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Settings"/>
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="MENU" FontSize="10" FontWeight="Bold" Foreground="#7181A2" CharacterSpacing="140" Margin="10,0,0,4"/>
+                    <Button x:Name="HomeButton" Content="⌂   Home" Click="HomeButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Home" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="SearchButton" Content="⌕   Search" Click="SearchButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Search" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="LibraryButton" Content="▣   My Library" Click="LibraryButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Library" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="DiscoverButton" Content="◉   Discover" Click="DiscoverButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Discover" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="SeriesButton" Content="▤   Series" Click="SeriesButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Series" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Border Height="1" Background="#183B70" Margin="8,12"/>
+                    <Button x:Name="AddonsButton" Content="◇   Add-ons" Click="AddonsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Add-ons" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="ConnectButton" Content="↗   Connect Stremio" Click="ConnectButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Connect Stremio" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                    <Button x:Name="SettingsButton" Content="⚙   Settings" Click="SettingsButton_Click" Style="{StaticResource NavButtonStyle}" Tag="Settings" GotFocus="NavButton_GotFocus" LostFocus="NavButton_LostFocus"/>
+                </StackPanel>
+            </ScrollViewer>
+            <StackPanel Grid.Row="3" Spacing="5">
+                <Border Height="1" Background="#183B70" Margin="0,0,0,7"/>
+                <TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/>
+                <TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/>
             </StackPanel>
-            <StackPanel Grid.Row="3" Spacing="5"><Border Height="1" Background="#183B70" Margin="0,0,0,7"/><TextBlock Text="D-PAD / LEFT STICK" FontSize="9" Foreground="#7181A2"/><TextBlock Text="A SELECT  •  B BACK" FontSize="9" Foreground="#7181A2"/></StackPanel>
         </Grid>
     </Border>
 </UserControl>

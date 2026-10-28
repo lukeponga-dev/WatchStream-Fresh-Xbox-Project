@@ -32,13 +32,15 @@ namespace WatchStream.Xbox
             if (e.Parameter is string streamUrl)
             {
                 LoadingOverlay.Visibility = Visibility.Visible;
+                PlaybackErrorPanel.Visibility = Visibility.Collapsed;
                 try
                 {
                     await _player.PlayStreamAsync(streamUrl);
                 }
                 catch (Exception)
                 {
-                    // Handle playback failure (unsupported codec, etc)
+                    PlaybackErrorText.Text = Services.LocalizedText.Get("Player_Failed", "This stream could not be played. It may use an unsupported format or codec.");
+                    PlaybackErrorPanel.Visibility = Visibility.Visible;
                 }
                 finally
                 {

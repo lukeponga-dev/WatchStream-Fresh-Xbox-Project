@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.UI.Xaml.Controls;
@@ -27,19 +28,36 @@ namespace WatchStream.Platform.Xbox
 
         public async Task PlayStreamAsync(string url)
         {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+                throw new ArgumentException("Playback requires a valid HTTP or HTTPS stream URL.", nameof(url));
+
+            var opened = new TaskCompletionSource<bool>();
+            TypedEventHandler<MediaPlayer, object> openedHandler = (sender, args) => opened.TrySetResult(true);
+            TypedEventHandler<MediaPlayer, MediaPlayerFailedEventArgs> failedHandler = (sender, args) =>
+                opened.TrySetException(new InvalidOperationException(string.IsNullOrWhiteSpace(args.ErrorMessage)
+                    ? "The Xbox media player could not open this stream." : args.ErrorMessage));
+            _mediaPlayer.MediaOpened += openedHandler;
+            _mediaPlayer.MediaFailed += failedHandler;
             try
             {
-                var source = Windows.Media.Core.MediaSource.CreateFromUri(new Uri(url));
-                _mediaPlayer.Source = source;
-                await Task.CompletedTask;
+                _mediaPlayer.Source = Windows.Media.Core.MediaSource.CreateFromUri(uri);
+                var completed = await Task.WhenAny(opened.Task, Task.Delay(TimeSpan.FromSeconds(25)));
+                if (completed != opened.Task)
+                    throw new TimeoutException("The Xbox media player did not open the stream within 25 seconds.");
+                await opened.Task;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Playback Error: {ex.Message}");
                 throw;
             }
+            finally
+            {
+                _mediaPlayer.MediaOpened -= openedHandler;
+                _mediaPlayer.MediaFailed -= failedHandler;
+            }
         }
-
         public void Stop()
         {
             _mediaPlayer.Source = null;

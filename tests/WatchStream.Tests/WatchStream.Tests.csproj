@@ -17,5 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\WatchStream.Core\WatchStream.Core.csproj" />
     <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioLinkService.cs" Link="Production\StremioLinkService.cs" />
+    <Compile Include="..\..\src\WatchStream.Xbox\Services\StremioProtocolParser.cs" Link="Production\StremioProtocolParser.cs" />
   </ItemGroup>
 </Project>

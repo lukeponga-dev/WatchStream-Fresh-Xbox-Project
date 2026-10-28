@@ -7,12 +7,12 @@
     Foreground="#F4F6FB"
     Loaded="AccountPage_Loaded">
     <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="238"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
         <local:NavigationSidebar Grid.Column="0" CurrentSection="Sign in"/>
         <Grid Grid.Column="1" Padding="34,26">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Spacing="5" Margin="4,0,0,20">
-                <TextBlock Text="SIGN IN" FontSize="11" FontWeight="Bold" Foreground="#39D6C5" CharacterSpacing="180"/>
+                <TextBlock Text="SIGN IN" FontSize="11" FontWeight="Bold" Foreground="#E50914" CharacterSpacing="180"/>
                 <TextBlock Text="Your WatchStream starts here" FontSize="34" FontWeight="Bold"/>
                 <TextBlock Text="Connect your Stremio account to sync your library and add-ons." FontSize="15" Foreground="#A9B5D1" TextWrapping="Wrap"/>
             </StackPanel>
@@ -21,7 +21,7 @@
                 <Border Grid.Column="0" Background="#09162D" BorderBrush="#1A3155" BorderThickness="1" CornerRadius="20" Padding="28">
                     <StackPanel Spacing="20" VerticalAlignment="Center">
                         <Border Width="58" Height="58" CornerRadius="16" Background="#102C40" HorizontalAlignment="Left">
-                            <TextBlock Text="?" FontSize="27" Foreground="#39D6C5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="?" FontSize="27" Foreground="#E50914" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel Spacing="8">
                             <TextBlock Text="One account. Your whole library." FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap"/>
@@ -43,10 +43,10 @@
                         <TextBlock Text="Choose how you want to sign in." FontSize="14" Foreground="#A9B5D1" TextWrapping="Wrap"/>
                         <Button x:Name="FacebookButton" Content="Continue with Facebook" Click="FacebookButton_Click" MinHeight="52" Background="#1877F2" Foreground="White" FontSize="16" FontWeight="SemiBold" HorizontalContentAlignment="Center"/>
                         <Grid ColumnSpacing="10" VerticalAlignment="Center"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Grid.Column="0" Height="1" Background="#263D62"/><TextBlock Grid.Column="1" Text="OR LINK WITH A CODE" FontSize="10" Foreground="#7186AA" CharacterSpacing="55" VerticalAlignment="Center"/><Border Grid.Column="2" Height="1" Background="#263D62"/></Grid>
-                        <Border Background="#061022" BorderBrush="#39D6C5" BorderThickness="1.5" CornerRadius="12" Padding="12">
+                        <Border Background="#061022" BorderBrush="#E50914" BorderThickness="1.5" CornerRadius="12" Padding="12">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="YOUR DEVICE CODE" FontSize="10" FontWeight="Bold" Foreground="#7186AA" CharacterSpacing="100" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="PairingCodeText" Text="CONNECTING..." FontSize="31" FontWeight="Bold" CharacterSpacing="120" HorizontalAlignment="Center" Foreground="#39D6C5"/>
+                                <TextBlock x:Name="PairingCodeText" Text="CONNECTING..." FontSize="31" FontWeight="Bold" CharacterSpacing="120" HorizontalAlignment="Center" Foreground="#E50914"/>
                                 <Border x:Name="QrCodeBorder" Width="164" Height="164" Background="White" CornerRadius="8" Padding="4" HorizontalAlignment="Center" Visibility="Collapsed">
                                     <WebView x:Name="PairingQrView" IsHitTestVisible="False"/>
                                 </Border>

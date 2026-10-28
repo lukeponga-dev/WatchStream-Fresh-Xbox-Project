@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Nav_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Nav_Discover" xml:space="preserve"><value>Discover</value></data>
+  <data name="Nav_Library" xml:space="preserve"><value>Library</value></data>
+  <data name="Nav_Series" xml:space="preserve"><value>Series</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Nav_Addons" xml:space="preserve"><value>Add-ons</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Nav_Menu" xml:space="preserve"><value>MENU</value></data>
+  <data name="Account_OpeningFacebook" xml:space="preserve"><value>Opening Stremio Facebook sign-in...</value></data>
+  <data name="Account_FinishingSignIn" xml:space="preserve"><value>Finishing sign-in with Stremio...</value></data>
+  <data name="Account_SignedIn" xml:space="preserve"><value>Signed in. Loading WatchStream...</value></data>
+  <data name="Account_OpenFailed" xml:space="preserve"><value>Couldn't open Stremio's Facebook sign-in page.</value></data>
+  <data name="Account_FacebookTimeout" xml:space="preserve"><value>Facebook sign-in wasn't completed in time. Return to WatchStream and try again.</value></data>
+  <data name="Account_LoadingCode" xml:space="preserve"><value>LOADING...</value></data>
+  <data name="Account_RequestingCode" xml:space="preserve"><value>Requesting a secure account-link code from Stremio...</value></data>
+  <data name="Account_LinkInstructions" xml:space="preserve"><value>Open the pairing page, sign in to Stremio, and approve this device. Then return here and select the button again to finish linking.</value></data>
+  <data name="Account_ConnectionFailed" xml:space="preserve"><value>Couldn't reach Stremio. Check your connection and try again.</value></data>
+  <data name="Account_Connected" xml:space="preserve"><value>Account connected. Loading WatchStream...</value></data>
+  <data name="Account_WaitingApproval" xml:space="preserve"><value>Waiting for approval on your phone or computer...</value></data>
+  <data name="Account_Retrying" xml:space="preserve"><value>Stremio is temporarily unreachable. Retrying automatically...</value></data>
+  <data name="Player_Loading" xml:space="preserve"><value>Loading stream...</value></data>
+  <data name="Player_Failed" xml:space="preserve"><value>This stream couldn't be played. It may use an unsupported format or codec.</value></data>
+  <data name="Player_Back" xml:space="preserve"><value>BACK</value></data>
+</root>

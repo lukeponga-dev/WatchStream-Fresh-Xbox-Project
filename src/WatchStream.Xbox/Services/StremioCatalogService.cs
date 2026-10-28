@@ -23,31 +23,6 @@ namespace WatchStream.Xbox.Services
         public StremioCatalogService(ISessionStore sessionStore) =>
             _sessionStore = sessionStore ?? throw new ArgumentNullException(nameof(sessionStore));
 
-        public async Task<IReadOnlyList<MediaItem>> GetLibraryAsync(CancellationToken cancellationToken)
-        {
-            var key = await _sessionStore.ReadSessionAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(key))
-                throw new InvalidOperationException("Connect your Stremio account to view your library.");
-
-            // Matches stremio-core DatastoreRequest for the libraryItem collection.
-            var body = "{\"authKey\":" + JsonSerializer.Serialize(key) +
-                       ",\"collection\":\"libraryItem\",\"ids\":[],\"all\":true}";
-            using var request = new HttpRequestMessage(HttpMethod.Post, ApiBase + "datastoreGet");
-            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-            using var response = await _http.SendAsync(request, cancellationToken);
-            var text = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException("Stremio couldn't load your library. Check your connection and try again.");
-            using var doc = JsonDocument.Parse(text);
-            var root = doc.RootElement;
-            if (HasError(root) || !root.TryGetProperty("result", out var result))
-                throw new InvalidOperationException("Stremio rejected the library request. Reconnect your account and try again.");
-
-            var entries = new List<MediaItem>();
-            CollectItems(result, entries);
-            return entries.GroupBy(x => x.Type + "|" + x.Id, StringComparer.OrdinalIgnoreCase).Select(x => x.First()).ToList();
-        }
-
         public async Task<IReadOnlyList<MediaItem>> GetDiscoverAsync(string mediaType, CancellationToken cancellationToken, string? searchQuery = null)
         {
             if (mediaType != "movie" && mediaType != "series")
@@ -86,14 +61,9 @@ namespace WatchStream.Xbox.Services
                             (!extras.TryGetValue(ReadString(x, "name") ?? string.Empty, out var supplied) || string.IsNullOrWhiteSpace(supplied)))) continue;
                         var catalogUri = StremioAddonService.BuildResourceUri(source.ManifestUrl, "catalog", mediaType, id, extras);                        using var response = await _http.GetAsync(catalogUri, cancellationToken);
                         if (!response.IsSuccessStatusCode) { failures++; continue; }
-                        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                        if (!doc.RootElement.TryGetProperty("metas", out var metas) || metas.ValueKind != JsonValueKind.Array)
-                            continue;
-                        foreach (var meta in metas.EnumerateArray())
-                        {
-                            var item = ParseMedia(meta);
-                            if (item != null) results.Add(item);
-                        }
+                        var parsedMetas = StremioProtocolParser.ParseCatalogMetas(await response.Content.ReadAsStringAsync());
+                        foreach (var meta in parsedMetas)
+                            results.Add(new MediaItem(meta.Id, meta.Type, meta.Name, meta.Poster, meta.Year, meta.Description));
                     }
                 }
                 catch (OperationCanceledException) { throw; }
@@ -127,23 +97,6 @@ namespace WatchStream.Xbox.Services
             }
             return false;
         }
-        private static void CollectItems(JsonElement value, List<MediaItem> output)
-        {
-            if (value.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var child in value.EnumerateArray()) CollectItems(child, output);
-                return;
-            }
-            if (value.ValueKind != JsonValueKind.Object) return;
-            if (value.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var child in items.EnumerateArray()) CollectItems(child, output);
-                return;
-            }
-            var item = ParseMedia(value);
-            if (item != null) output.Add(item);
-        }
-
         private static MediaItem? ParseMedia(JsonElement entry)
         {
             if (entry.ValueKind != JsonValueKind.Object) return null;

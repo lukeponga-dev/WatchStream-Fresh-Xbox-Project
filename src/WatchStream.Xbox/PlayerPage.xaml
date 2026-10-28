@@ -14,11 +14,14 @@
                             VerticalAlignment="Stretch"/>
 
         <!-- Explicit exit control complements Xbox B/Back and returns to the previous logical page. -->
-        <Button Content="‹  BACK" HorizontalAlignment="Left" VerticalAlignment="Top"
+        <Button Content="â€¹  BACK" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Margin="32,28,0,0" Padding="20,12" MinWidth="112" MinHeight="48"
                 Background="#CC121824" Foreground="White" BorderThickness="0"
                 Click="PlayerBack_Click" />
 
+        <Border x:Name="PlaybackErrorPanel" Visibility="Collapsed" Background="#E6101724" Padding="28" CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="640">
+            <TextBlock x:Name="PlaybackErrorText" TextWrapping="Wrap" Foreground="White" FontSize="20" TextAlignment="Center" />
+        </Border>
         <!-- Overlay for errors or loading -->
         <Grid x:Name="LoadingOverlay" Visibility="Collapsed" Background="#AA000000">
             <TextBlock Text="Loading Stream..." Foreground="White" 

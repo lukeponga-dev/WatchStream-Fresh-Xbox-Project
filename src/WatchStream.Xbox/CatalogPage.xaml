@@ -8,7 +8,7 @@
     Loaded="Page_Loaded">
 
     <Page.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#39D6C5" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#E50914" />
         <SolidColorBrush x:Key="MutedBrush" Color="#9BA5B5" />
 
         <Style x:Key="CatalogCardButtonStyle" TargetType="Button">
@@ -26,13 +26,13 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="ScaleX" To="1.05" Duration="0:0:0.2"/>
                                             <DoubleAnimation Storyboard.TargetName="CardContent" Storyboard.TargetProperty="ScaleY" To="1.05" Duration="0:0:0.2"/>
-                                            <ColorAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#39D6C5" Duration="0:0:0.2"/>
+                                            <ColorAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#E50914" Duration="0:0:0.2"/>
                                             <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
                                         </Storyboard>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                            <Border x:Name="Glow" BorderBrush="#39D6C5" BorderThickness="3" CornerRadius="12" Opacity="0" Margin="5"/>
+                            <Border x:Name="Glow" BorderBrush="#E50914" BorderThickness="3" CornerRadius="12" Opacity="0" Margin="5"/>
                             <Grid x:Name="CardContent" RenderTransformOrigin="0.5,0.5">
                                 <Grid.RenderTransform>
                                     <ScaleTransform ScaleX="1" ScaleY="1"/>
@@ -47,7 +47,7 @@
     </Page.Resources>
 
     <Grid ColumnSpacing="0" XYFocusKeyboardNavigation="Enabled">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="238"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
         <local:NavigationSidebar x:Name="PageSidebar" Grid.Column="0" CurrentSection="Discover"/>
         <Grid Grid.Column="1" Padding="44,36,44,42">
         <Grid.RowDefinitions>
@@ -66,29 +66,47 @@
         </StackPanel>
 
         <!-- Content Grid -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
-            <GridView x:Name="MediaGrid" 
-                      IsItemClickEnabled="False"
-                      SelectionMode="None">
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="6" />
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
-                <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <Button Style="{StaticResource CatalogCardButtonStyle}" Width="200" Height="290" Margin="12" Click="MediaCard_Click">
-                            <Grid>
-                                <Image Source="{Binding PosterUrl}" Stretch="UniformToFill" Width="200" Height="290"/>
-                                <Border Background="#99000000" VerticalAlignment="Bottom" Height="72" CornerRadius="0,0,12,12" Padding="12,0,12,0">
-                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                </Border>
-                            </Grid>
-                        </Button>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
-        </ScrollViewer>
+        <Grid Grid.Row="1">
+            <ScrollViewer x:Name="ResultsScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <GridView x:Name="MediaGrid"
+                          IsItemClickEnabled="False"
+                          SelectionMode="None"
+                          XYFocusKeyboardNavigation="Enabled">
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="5" />
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                    <GridView.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource CatalogCardButtonStyle}" Width="200" Height="290" Margin="12" Click="MediaCard_Click">
+                                <Grid>
+                                    <Image Source="{Binding PosterUrl}" Stretch="UniformToFill" Width="200" Height="290"/>
+                                    <Border Background="#99000000" VerticalAlignment="Bottom" Height="72" CornerRadius="0,0,12,12" Padding="12,0,12,0">
+                                        <TextBlock Text="{Binding Name}" Foreground="White" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </ScrollViewer>
+            <Border x:Name="StatePanel" Visibility="Collapsed" Background="#101B30" BorderBrush="#294365"
+                    BorderThickness="1" CornerRadius="14" Padding="32" MaxWidth="680"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Spacing="14" HorizontalAlignment="Center">
+                    <ProgressRing x:Name="StateProgressRing" Width="44" Height="44" IsActive="False"
+                                  Visibility="Collapsed" Foreground="#39D6C5" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="StateTitle" Text="Loading" FontSize="24" FontWeight="SemiBold"
+                               TextAlignment="Center" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="StateMessage" Text="Please wait…" FontSize="16" Foreground="#9BA8C7"
+                               TextAlignment="Center" TextWrapping="Wrap" MaxWidth="560"/>
+                    <Button x:Name="RetryButton" Content="Try again" Click="RetryButton_Click"
+                            Visibility="Collapsed" MinWidth="150" MinHeight="48" Background="#5268FF"
+                            Foreground="White" BorderThickness="0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
         </Grid>
     </Grid>
 </Page>
