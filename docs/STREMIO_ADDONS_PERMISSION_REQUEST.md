@@ -1,6 +1,6 @@
 # Stremio Addons directory permission request
 
-**Recipient:** hello@stremio-addons.net  
+**Recipient:** hello@stremio-addons.net
 **Subject:** Written permission request - Stremio Addons API integration in WatchStream for Xbox
 
 Hello Stremio Addons team,
@@ -18,23 +18,24 @@ Please clarify any conditions for:
 - Use of listing names, descriptions, ratings, categories, and manifest URLs in the client
 - Any required disclaimer or branding restrictions
 
-Planned distribution model: **[describe whether the release is personal, free/non-commercial, or commercial]**  
-Expected audience/request volume: **[estimate if known]**  
+Planned distribution model: **Free public release, non-commercial, for Xbox One and Xbox Series X|S**
+Expected audience: **Public Xbox release**
+Expected directory request volume: **Unknown at this stage; WatchStream will use caching and reasonable request limits, subject to your guidance**
 Project repository or public project page: https://github.com/lukeponga-dev/WatchStream-Fresh-Xbox-Project
 
 I will keep the directory feature disabled in distributed builds unless I receive written permission for the intended use. I can provide further details or adjust the integration to meet your requirements.
 
 Thank you for your time.
 
-Regards,  
-Luke  
+Regards,
+Luke
 WatchStream project maintainer
 
 ---
 
 ## Release-owner follow-up
 
-- [ ] Fill in the planned distribution model and expected usage.
+- [x] Fill in the planned distribution model and expected usage (traffic is explicitly stated as unknown).
 - [ ] Send the request to hello@stremio-addons.net or use an official moderator contact channel.
 - [ ] Save the written response in the project's private release records; do not commit private correspondence without permission.
 - [ ] Update docs/RELEASE_READINESS.md based on the response.

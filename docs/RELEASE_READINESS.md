@@ -4,6 +4,8 @@
 
 ### 1. Stremio Addons directory permission - external blocker
 
+> Release plan confirmed on 2026-10-28: free public, non-commercial Xbox release; intended audience is public; directory request volume is not yet known. The permission request has been filled with this plan, but has **not** been sent and no permission has been granted. Send it only after reviewing the final text. Keep the feature disabled by default.
+
 The directory API documentation describes the public REST API as experimental and read-only. The Terms of Use permit personal/non-commercial use but restrict using directory data to compete with, substitute for, or harm Stremio Addons without prior written permission. WatchStream embeds an add-on directory in a Stremio-compatible client, so do not assume the intended public release is covered.
 
 Before shipping a build that exposes the directory:
